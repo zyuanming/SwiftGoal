@@ -8,6 +8,7 @@
 
 import ReactiveCocoa
 import Result
+import ReactiveSwift
 
 class MatchesViewModel {
 
@@ -24,17 +25,17 @@ class MatchesViewModel {
     let alertMessageSignal: Signal<String, NoError>
 
     // Actions
-    lazy var deleteAction: Action<NSIndexPath, Bool, NSError> = { [unowned self] in
+    lazy var deleteAction: Action<IndexPath, Bool, AnyError> = { [unowned self] in
         return Action({ indexPath in
             let match = self.matchAtIndexPath(indexPath)
             return self.store.deleteMatch(match)
         })
     }()
 
-    private let store: StoreType
-    private let contentChangesObserver: Observer<MatchChangeset, NoError>
-    private let alertMessageObserver: Observer<String, NoError>
-    private var matches: [Match]
+    fileprivate let store: StoreType
+    fileprivate let contentChangesObserver: Observer<MatchChangeset, NoError>
+    fileprivate let alertMessageObserver: Observer<String, NoError>
+    fileprivate var matches: [Match]
 
     // MARK: - Lifecycle
 
@@ -69,18 +70,18 @@ class MatchesViewModel {
             .map { _ in () }
             .observe(refreshObserver)
 
-        SignalProducer(signal: refreshSignal)
-            .on(next: { _ in isLoading.value = true })
-            .flatMap(.Latest) { _ in
+        SignalProducer(refreshSignal)
+            .on(starting: { _ in isLoading.value = true })
+            .flatMap(.latest) { _ in
                 return store.fetchMatches()
                     .flatMapError { error in
-                        alertMessageObserver.sendNext(error.localizedDescription)
+                        alertMessageObserver.send(value: error.localizedDescription)
                         return SignalProducer(value: [])
                     }
             }
-            .on(next: { _ in isLoading.value = false })
+            .on(starting: { _ in isLoading.value = false })
             .combinePrevious([]) // Preserve history to calculate changeset
-            .startWithNext({ [weak self] (oldMatches, newMatches) in
+            .startWithValues({ [weak self] (oldMatches, newMatches) in
                 self?.matches = newMatches
                 if let observer = self?.contentChangesObserver {
                     let changeset = Changeset(
@@ -88,7 +89,7 @@ class MatchesViewModel {
                         newItems: newMatches,
                         contentMatches: Match.contentMatches
                     )
-                    observer.sendNext(changeset)
+                    observer.send(value: changeset)
                 }
             })
 
@@ -104,21 +105,21 @@ class MatchesViewModel {
         return 1
     }
 
-    func numberOfMatchesInSection(section: Int) -> Int {
+    func numberOfMatchesInSection(_ section: Int) -> Int {
         return matches.count
     }
 
-    func homePlayersAtIndexPath(indexPath: NSIndexPath) -> String {
+    func homePlayersAtIndexPath(_ indexPath: IndexPath) -> String {
         let match = matchAtIndexPath(indexPath)
         return separatedNamesForPlayers(match.homePlayers)
     }
 
-    func awayPlayersAtIndexPath(indexPath: NSIndexPath) -> String {
+    func awayPlayersAtIndexPath(_ indexPath: IndexPath) -> String {
         let match = matchAtIndexPath(indexPath)
         return separatedNamesForPlayers(match.awayPlayers)
     }
 
-    func resultAtIndexPath(indexPath: NSIndexPath) -> String {
+    func resultAtIndexPath(_ indexPath: IndexPath) -> String {
         let match = matchAtIndexPath(indexPath)
         return "\(match.homeGoals) : \(match.awayGoals)"
     }
@@ -129,19 +130,19 @@ class MatchesViewModel {
         return EditMatchViewModel(store: store)
     }
 
-    func editViewModelForMatchAtIndexPath(indexPath: NSIndexPath) -> EditMatchViewModel {
+    func editViewModelForMatchAtIndexPath(_ indexPath: IndexPath) -> EditMatchViewModel {
         let match = matchAtIndexPath(indexPath)
         return EditMatchViewModel(store: store, match: match)
     }
 
     // MARK: Internal Helpers
 
-    private func matchAtIndexPath(indexPath: NSIndexPath) -> Match {
+    fileprivate func matchAtIndexPath(_ indexPath: IndexPath) -> Match {
         return matches[indexPath.row]
     }
 
-    private func separatedNamesForPlayers(players: [Player]) -> String {
+    fileprivate func separatedNamesForPlayers(_ players: [Player]) -> String {
         let playerNames = players.map { player in player.name }
-        return playerNames.joinWithSeparator(", ")
+        return playerNames.joined(separator: ", ")
     }
 }

@@ -8,6 +8,7 @@
 
 import ReactiveCocoa
 import Result
+import ReactiveSwift
 
 class RankingsViewModel {
 
@@ -23,11 +24,11 @@ class RankingsViewModel {
     let isLoading: MutableProperty<Bool>
     let alertMessageSignal: Signal<String, NoError>
 
-    private let store: StoreType
-    private let contentChangesObserver: Observer<RankingChangeset, NoError>
-    private let alertMessageObserver: Observer<String, NoError>
+    fileprivate let store: StoreType
+    fileprivate let contentChangesObserver: Observer<RankingChangeset, NoError>
+    fileprivate let alertMessageObserver: Observer<String, NoError>
 
-    private var rankings: [Ranking]
+    fileprivate var rankings: [Ranking]
 
     // MARK: Lifecycle
 
@@ -55,18 +56,18 @@ class RankingsViewModel {
             .map { _ in () }
             .start(refreshObserver)
 
-        SignalProducer(signal: refreshSignal)
-            .on(next: { _ in isLoading.value = true })
-            .flatMap(.Latest, transform: { _ in
+        SignalProducer(refreshSignal)
+            .on(starting: { _ in isLoading.value = true })
+            .flatMap(.latest, transform: { _ in
                 return store.fetchRankings()
                     .flatMapError { error in
-                        alertMessageObserver.sendNext(error.localizedDescription)
+                        alertMessageObserver.send(value: error.localizedDescription)
                         return SignalProducer(value: [])
                 }
             })
-            .on(next: { _ in isLoading.value = false })
+            .on(starting: { _ in isLoading.value = false })
             .combinePrevious([]) // Preserve history to calculate changeset
-            .startWithNext({ [weak self] (oldRankings, newRankings) in
+            .startWithValues({ [weak self] (oldRankings, newRankings) in
                 self?.rankings = newRankings
                 if let observer = self?.contentChangesObserver {
                     let changeset = Changeset(
@@ -74,7 +75,7 @@ class RankingsViewModel {
                         newItems: newRankings,
                         contentMatches: Ranking.contentMatches
                     )
-                    observer.sendNext(changeset)
+                    observer.send(value: changeset)
                 }
             })
     }
@@ -85,22 +86,22 @@ class RankingsViewModel {
         return 1
     }
 
-    func numberOfRankingsInSection(section: Int) -> Int {
+    func numberOfRankingsInSection(_ section: Int) -> Int {
         return rankings.count
     }
 
-    func playerNameAtIndexPath(indexPath: NSIndexPath) -> String {
+    func playerNameAtIndexPath(_ indexPath: IndexPath) -> String {
         return rankingAtIndexPath(indexPath).player.name
     }
 
-    func ratingAtIndexPath(indexPath: NSIndexPath) -> String {
+    func ratingAtIndexPath(_ indexPath: IndexPath) -> String {
         let rating = rankingAtIndexPath(indexPath).rating
         return String(format: "%.2f", rating)
     }
 
     // MARK: Internal Helpers
 
-    private func rankingAtIndexPath(indexPath: NSIndexPath) -> Ranking {
+    fileprivate func rankingAtIndexPath(_ indexPath: IndexPath) -> Ranking {
         return rankings[indexPath.row]
     }
 }

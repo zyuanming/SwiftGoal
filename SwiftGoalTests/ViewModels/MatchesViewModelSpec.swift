@@ -11,6 +11,7 @@ import Nimble
 import ReactiveCocoa
 import Result
 @testable import SwiftGoal
+import ReactiveSwift
 
 class MatchesViewModelSpec: QuickSpec {
     override func spec() {
@@ -50,22 +51,22 @@ class MatchesViewModelSpec: QuickSpec {
                 }
 
                 it("returns the home players in alphabetical order") {
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
                     expect(matchesViewModel.homePlayersAtIndexPath(indexPath1)).to(equal("C, A"))
                     expect(matchesViewModel.homePlayersAtIndexPath(indexPath2)).to(equal("C, B"))
                 }
 
                 it("returns the away players in alphabetical order") {
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
                     expect(matchesViewModel.awayPlayersAtIndexPath(indexPath1)).to(equal("D, B"))
                     expect(matchesViewModel.awayPlayersAtIndexPath(indexPath2)).to(equal("A, D"))
                 }
 
                 it("displays the right match results") {
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
                     expect(matchesViewModel.resultAtIndexPath(indexPath1)).to(equal("2 : 1"))
                     expect(matchesViewModel.resultAtIndexPath(indexPath2)).to(equal("0 : 1"))
                 }
@@ -73,7 +74,7 @@ class MatchesViewModelSpec: QuickSpec {
 
             context("when asked to refresh") {
                 it("fetches a list of matches") {
-                    matchesViewModel.refreshObserver.sendNext(())
+                    matchesViewModel.refreshObserver.send(value: ())
                     expect(mockStore.didFetchMatches).to(beTrue())
                 }
             }
@@ -83,32 +84,32 @@ class MatchesViewModelSpec: QuickSpec {
                     // Aggregate loading states into an array
                     var loadingStates: [Bool] = []
                     matchesViewModel.isLoading.producer
-                        .take(5)
+                        .take(first: 5)
                         .collect()
-                        .startWithNext({ values in
+                        .startWithValues({ values in
                             loadingStates = values
                         })
 
                     matchesViewModel.active.value = true
-                    matchesViewModel.refreshObserver.sendNext(())
+                    matchesViewModel.refreshObserver.send(value: ())
 
                     expect(loadingStates).to(equal([false, true, false, true, false]))
                 }
 
                 it("notifies subscribers about content changes") {
                     var changeset: Changeset<Match>?
-                    matchesViewModel.contentChangesSignal.observeNext { contentChanges in
+                    matchesViewModel.contentChangesSignal.observeValues { contentChanges in
                         changeset = contentChanges
                     }
 
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
 
                     matchesViewModel.active.value = true
                     expect(changeset?.deletions).to(beEmpty())
                     expect(changeset?.insertions).to(equal([indexPath1, indexPath2]))
 
-                    matchesViewModel.refreshObserver.sendNext(())
+                    matchesViewModel.refreshObserver.send(value: ())
                     expect(changeset?.deletions).to(beEmpty())
                     expect(changeset?.insertions).to(beEmpty())
                 }
@@ -118,7 +119,7 @@ class MatchesViewModelSpec: QuickSpec {
                 mockStore.matches = nil // will cause fetch error
 
                 var didRaiseAlert = false
-                matchesViewModel.alertMessageSignal.observeNext({ alertMessage in
+                matchesViewModel.alertMessageSignal.observeValues({ alertMessage in
                     didRaiseAlert = true
                 })
 
@@ -129,7 +130,7 @@ class MatchesViewModelSpec: QuickSpec {
 
             it("deletes the correct match when asked to") {
                 let match = mockStore.matches![1]
-                let indexPath = NSIndexPath(forRow: 1, inSection: 0)
+                let indexPath = IndexPath(row: 1, section: 0)
 
                 var deletedSuccessfully = false
 
@@ -150,7 +151,7 @@ class MatchesViewModelSpec: QuickSpec {
             it("provides the correct view model for editing an existing match") {
                 matchesViewModel.active.value = true
 
-                let indexPath = NSIndexPath(forRow: 0, inSection: 0)
+                let indexPath = IndexPath(row: 0, section: 0)
                 let editMatchViewModel = matchesViewModel.editViewModelForMatchAtIndexPath(indexPath)
                 expect(editMatchViewModel.title).to(equal("Edit Match"))
                 expect(editMatchViewModel.formattedHomeGoals.value).to(equal("2"))

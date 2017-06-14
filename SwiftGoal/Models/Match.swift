@@ -8,6 +8,7 @@
 
 import Argo
 import Curry
+import Runes
 
 struct Match {
     let identifier: String
@@ -16,11 +17,11 @@ struct Match {
     let homeGoals: Int
     let awayGoals: Int
 
-    static private let identifierKey = "id"
-    static private let homePlayersKey = "home_players"
-    static private let awayPlayersKey = "away_players"
-    static private let homeGoalsKey = "home_goals"
-    static private let awayGoalsKey = "away_goals"
+    static fileprivate let identifierKey = "id"
+    static fileprivate let homePlayersKey = "home_players"
+    static fileprivate let awayPlayersKey = "away_players"
+    static fileprivate let homeGoalsKey = "home_goals"
+    static fileprivate let awayGoalsKey = "away_goals"
 
     init(identifier: String, homePlayers: [Player], awayPlayers: [Player], homeGoals: Int, awayGoals: Int) {
         self.identifier = identifier
@@ -31,7 +32,7 @@ struct Match {
     }
 
     // TODO: Decide if content matching should include identifier or not
-    static func contentMatches(lhs: Match, _ rhs: Match) -> Bool {
+    static func contentMatches(_ lhs: Match, _ rhs: Match) -> Bool {
         return lhs.identifier == rhs.identifier
             && Player.contentMatches(lhs.homePlayers, rhs.homePlayers)
             && Player.contentMatches(lhs.awayPlayers, rhs.awayPlayers)
@@ -51,7 +52,7 @@ func ==(lhs: Match, rhs: Match) -> Bool {
 // MARK: Decodable
 
 extension Match: Decodable {
-    static func decode(json: JSON) -> Decoded<Match> {
+    static func decode(_ json: JSON) -> Decoded<Match> {
         return curry(Match.init)
             <^> json <| identifierKey
             <*> json <|| homePlayersKey
@@ -66,11 +67,11 @@ extension Match: Decodable {
 extension Match: Encodable {
     func encode() -> [String: AnyObject] {
         return [
-            Match.identifierKey: identifier,
-            Match.homePlayersKey: homePlayers.map { $0.encode() },
-            Match.awayPlayersKey: awayPlayers.map { $0.encode() },
-            Match.homeGoalsKey: homeGoals,
-            Match.awayGoalsKey: awayGoals
+            Match.identifierKey: identifier as AnyObject,
+            Match.homePlayersKey: homePlayers.map { $0.encode() } as AnyObject,
+            Match.awayPlayersKey: awayPlayers.map { $0.encode() }  as AnyObject,
+            Match.homeGoalsKey: homeGoals as AnyObject,
+            Match.awayGoalsKey: awayGoals as AnyObject
         ]
     }
 }

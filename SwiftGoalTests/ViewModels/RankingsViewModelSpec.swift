@@ -10,6 +10,7 @@ import Quick
 import Nimble
 import ReactiveCocoa
 @testable import SwiftGoal
+import ReactiveSwift
 
 class RankingsViewModelSpec: QuickSpec {
     override func spec() {
@@ -49,10 +50,10 @@ class RankingsViewModelSpec: QuickSpec {
                 }
 
                 it("displays the right player names") {
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
-                    let indexPath3 = NSIndexPath(forRow: 2, inSection: 0)
-                    let indexPath4 = NSIndexPath(forRow: 3, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
+                    let indexPath3 = IndexPath(row: 2, section: 0)
+                    let indexPath4 = IndexPath(row: 3, section: 0)
                     expect(rankingsViewModel.playerNameAtIndexPath(indexPath1)).to(equal("A"))
                     expect(rankingsViewModel.playerNameAtIndexPath(indexPath2)).to(equal("C"))
                     expect(rankingsViewModel.playerNameAtIndexPath(indexPath3)).to(equal("D"))
@@ -60,10 +61,10 @@ class RankingsViewModelSpec: QuickSpec {
                 }
 
                 it("displays the right ratings") {
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
-                    let indexPath3 = NSIndexPath(forRow: 2, inSection: 0)
-                    let indexPath4 = NSIndexPath(forRow: 3, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
+                    let indexPath3 = IndexPath(row: 2, section: 0)
+                    let indexPath4 = IndexPath(row: 3, section: 0)
                     expect(rankingsViewModel.ratingAtIndexPath(indexPath1)).to(equal("10.00"))
                     expect(rankingsViewModel.ratingAtIndexPath(indexPath2)).to(equal("5.00"))
                     expect(rankingsViewModel.ratingAtIndexPath(indexPath3)).to(equal("5.00"))
@@ -73,7 +74,7 @@ class RankingsViewModelSpec: QuickSpec {
 
             context("when asked to refresh") {
                 it("fetches a list of rankings") {
-                    rankingsViewModel.refreshObserver.sendNext(())
+                    rankingsViewModel.refreshObserver.send(value: ())
                     expect(mockStore.didFetchRankings).to(beTrue())
                 }
             }
@@ -83,36 +84,36 @@ class RankingsViewModelSpec: QuickSpec {
                     // Aggregate loading states into an array
                     var loadingStates: [Bool] = []
                     rankingsViewModel.isLoading.producer
-                        .take(5)
+                        .take(first: 5)
                         .collect()
-                        .startWithNext({ values in
+                        .startWithValues({ values in
                             loadingStates = values
                         })
 
                     rankingsViewModel.active.value = true
-                    rankingsViewModel.refreshObserver.sendNext(())
+                    rankingsViewModel.refreshObserver.send(value: ())
 
                     expect(loadingStates).to(equal([false, true, false, true, false]))
                 }
 
                 it("notifies subscribers about content changes") {
                     var changeset: Changeset<Ranking>?
-                    rankingsViewModel.contentChangesSignal.observeNext { contentChanges in
+                    rankingsViewModel.contentChangesSignal.observeValues { contentChanges in
                         changeset = contentChanges
                     }
 
                     let expectedInsertions = [
-                        NSIndexPath(forRow: 0, inSection: 0),
-                        NSIndexPath(forRow: 1, inSection: 0),
-                        NSIndexPath(forRow: 2, inSection: 0),
-                        NSIndexPath(forRow: 3, inSection: 0)
+                        IndexPath(row: 0, section: 0),
+                        IndexPath(row: 1, section: 0),
+                        IndexPath(row: 2, section: 0),
+                        IndexPath(row: 3, section: 0)
                     ]
 
                     rankingsViewModel.active.value = true
                     expect(changeset?.deletions).to(beEmpty())
                     expect(changeset?.insertions).to(equal(expectedInsertions))
 
-                    rankingsViewModel.refreshObserver.sendNext(())
+                    rankingsViewModel.refreshObserver.send(value: ())
                     expect(changeset?.deletions).to(beEmpty())
                     expect(changeset?.insertions).to(beEmpty())
                 }
@@ -122,7 +123,7 @@ class RankingsViewModelSpec: QuickSpec {
                 mockStore.rankings = nil // will cause fetch error
 
                 var didRaiseAlert = false
-                rankingsViewModel.alertMessageSignal.observeNext({ alertMessage in
+                rankingsViewModel.alertMessageSignal.observeValues({ alertMessage in
                     didRaiseAlert = true
                 })
 

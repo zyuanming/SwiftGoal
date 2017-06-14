@@ -8,25 +8,27 @@
 
 import Argo
 import ReactiveCocoa
+import ReactiveSwift
+import Result
 
 class LocalStore: StoreType {
 
-    private var matches = [Match]()
-    private var players = [Player]()
+    fileprivate var matches = [Match]()
+    fileprivate var players = [Player]()
 
-    private let rankingEngine = RankingEngine()
+    fileprivate let rankingEngine = RankingEngine()
 
-    private let matchesKey = "matches"
-    private let playersKey = "players"
-    private let archiveFileName = "LocalStore"
+    fileprivate let matchesKey = "matches"
+    fileprivate let playersKey = "players"
+    fileprivate let archiveFileName = "LocalStore"
 
     // MARK: Matches
 
-    func fetchMatches() -> SignalProducer<[Match], NSError> {
+    func fetchMatches() -> SignalProducer<[Match], AnyError> {
         return SignalProducer(value: matches)
     }
 
-    func createMatch(parameters: MatchParameters) -> SignalProducer<Bool, NSError> {
+    func createMatch(_ parameters: MatchParameters) -> SignalProducer<Bool, AnyError> {
         let identifier = randomIdentifier()
         let match = matchFromParameters(parameters, withIdentifier: identifier)
         matches.append(match)
@@ -34,20 +36,20 @@ class LocalStore: StoreType {
         return SignalProducer(value: true)
     }
 
-    func updateMatch(match: Match, parameters: MatchParameters) -> SignalProducer<Bool, NSError> {
-        if let oldMatchIndex = matches.indexOf(match) {
+    func updateMatch(_ match: Match, parameters: MatchParameters) -> SignalProducer<Bool, AnyError> {
+        if let oldMatchIndex = matches.index(of: match) {
             let newMatch = matchFromParameters(parameters, withIdentifier: match.identifier)
-            matches.removeAtIndex(oldMatchIndex)
-            matches.insert(newMatch, atIndex: oldMatchIndex)
+            matches.remove(at: oldMatchIndex)
+            matches.insert(newMatch, at: oldMatchIndex)
             return SignalProducer(value: true)
         } else {
             return SignalProducer(value: false)
         }
     }
 
-    func deleteMatch(match: Match) -> SignalProducer<Bool, NSError> {
-        if let index = matches.indexOf(match) {
-            matches.removeAtIndex(index)
+    func deleteMatch(_ match: Match) -> SignalProducer<Bool, AnyError> {
+        if let index = matches.index(of: match) {
+            matches.remove(at: index)
             return SignalProducer(value: true)
         } else {
             return SignalProducer(value: false)
@@ -56,19 +58,19 @@ class LocalStore: StoreType {
 
     // MARK: Players
 
-    func fetchPlayers() -> SignalProducer<[Player], NSError> {
+    func fetchPlayers() -> SignalProducer<[Player], AnyError> {
         return SignalProducer(value: players)
     }
 
-    func createPlayerWithName(name: String) -> SignalProducer<Bool, NSError> {
+    func createPlayerWithName(_ name: String) -> SignalProducer<Bool, AnyError> {
         let player = Player(identifier: randomIdentifier(), name: name)
 
         // Keep alphabetical order when inserting player
-        let alphabeticalIndex = players.indexOf { existingPlayer in
+        let alphabeticalIndex = players.index { existingPlayer in
             existingPlayer.name > player.name
         }
         if let index = alphabeticalIndex {
-            players.insert(player, atIndex: index)
+            players.insert(player, at: index)
         } else {
             players.append(player)
         }
@@ -78,7 +80,7 @@ class LocalStore: StoreType {
 
     // MARK: Rankings
 
-    func fetchRankings() -> SignalProducer<[Ranking], NSError> {
+    func fetchRankings() -> SignalProducer<[Ranking], AnyError> {
       let rankings = rankingEngine.rankingsForPlayers(players, fromMatches: matches)
       return SignalProducer(value: rankings)
     }
@@ -99,11 +101,11 @@ class LocalStore: StoreType {
     func unarchiveFromDisk() {
         if let
             path = persistentFilePath(),
-            dataDict = NSKeyedUnarchiver.unarchiveObjectWithFile(path) as? [String: AnyObject],
-            matchesDict = dataDict[matchesKey],
-            playersDict = dataDict[playersKey],
-            matches: [Match] = decode(matchesDict),
-            players: [Player] = decode(playersDict)
+            let dataDict = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? [String: AnyObject],
+            let matchesDict = dataDict[matchesKey],
+            let playersDict = dataDict[playersKey],
+            let matches: [Match] = decode(matchesDict),
+            let players: [Player] = decode(playersDict)
         {
             self.matches = matches
             self.players = players
@@ -112,26 +114,26 @@ class LocalStore: StoreType {
 
     // MARK: Private Helpers
 
-    private func randomIdentifier() -> String {
-        return NSUUID().UUIDString
+    fileprivate func randomIdentifier() -> String {
+        return UUID().uuidString
     }
 
-    private func matchFromParameters(parameters: MatchParameters, withIdentifier identifier: String) -> Match {
+    fileprivate func matchFromParameters(_ parameters: MatchParameters, withIdentifier identifier: String) -> Match {
         let sortByName: (Player, Player) -> Bool = { players in
             players.0.name < players.1.name
         }
 
         return Match(
             identifier: identifier,
-            homePlayers: parameters.homePlayers.sort(sortByName),
-            awayPlayers: parameters.awayPlayers.sort(sortByName),
+            homePlayers: parameters.homePlayers.sorted(by: sortByName),
+            awayPlayers: parameters.awayPlayers.sorted(by: sortByName),
             homeGoals: parameters.homeGoals,
             awayGoals: parameters.awayGoals
         )
     }
 
-    private func persistentFilePath() -> String? {
-        let basePath = NSSearchPathForDirectoriesInDomains(NSSearchPathDirectory.DocumentDirectory, NSSearchPathDomainMask.UserDomainMask, true).first as NSString?
-        return basePath?.stringByAppendingPathComponent(archiveFileName)
+    fileprivate func persistentFilePath() -> String? {
+        let basePath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first as NSString?
+        return basePath?.appendingPathComponent(archiveFileName)
     }
 }

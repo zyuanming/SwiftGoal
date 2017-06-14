@@ -7,6 +7,8 @@
 //
 
 import ReactiveCocoa
+import ReactiveSwift
+import Result
 
 struct MatchParameters {
     let homePlayers: Set<Player>
@@ -17,15 +19,15 @@ struct MatchParameters {
 
 protocol StoreType {
     // Matches
-    func fetchMatches() -> SignalProducer<[Match], NSError>
-    func createMatch(parameters: MatchParameters) -> SignalProducer<Bool, NSError>
-    func updateMatch(match: Match, parameters: MatchParameters) -> SignalProducer<Bool, NSError>
-    func deleteMatch(match: Match) -> SignalProducer<Bool, NSError>
+    func fetchMatches() -> SignalProducer<[Match], AnyError>
+    func createMatch(_ parameters: MatchParameters) -> SignalProducer<Bool, AnyError>
+    func updateMatch(_ match: Match, parameters: MatchParameters) -> SignalProducer<Bool, AnyError>
+    func deleteMatch(_ match: Match) -> SignalProducer<Bool, AnyError>
 
     // Players
-    func fetchPlayers() -> SignalProducer<[Player], NSError>
-    func createPlayerWithName(name: String) -> SignalProducer<Bool, NSError>
+    func fetchPlayers() -> SignalProducer<[Player], AnyError>
+    func createPlayerWithName(_ name: String) -> SignalProducer<Bool, AnyError>
 
     // Rankings
-    func fetchRankings() -> SignalProducer<[Ranking], NSError>
+    func fetchRankings() -> SignalProducer<[Ranking], AnyError>
 }

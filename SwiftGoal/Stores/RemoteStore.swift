@@ -8,37 +8,40 @@
 
 import Argo
 import ReactiveCocoa
+import ReactiveSwift
+import Result
 
 class RemoteStore: StoreType {
 
     enum RequestMethod {
-        case GET
-        case POST
-        case PUT
-        case DELETE
+        case get
+        case post
+        case put
+        case delete
     }
 
-    private let baseURL: NSURL
-    private let matchesURL: NSURL
-    private let playersURL: NSURL
-    private let rankingsURL: NSURL
+    fileprivate let baseURL: URL
+    fileprivate let matchesURL: URL
+    fileprivate let playersURL: URL
+    fileprivate let rankingsURL: URL
 
     // MARK: Lifecycle
 
-    init(baseURL: NSURL) {
+    init(baseURL: URL) {
         self.baseURL = baseURL
-        self.matchesURL = NSURL(string: "matches", relativeToURL: baseURL)!
-        self.playersURL = NSURL(string: "players", relativeToURL: baseURL)!
-        self.rankingsURL = NSURL(string: "rankings", relativeToURL: baseURL)!
+        self.matchesURL = URL(string: "matches", relativeTo: baseURL)!
+        self.playersURL = URL(string: "players", relativeTo: baseURL)!
+        self.rankingsURL = URL(string: "rankings", relativeTo: baseURL)!
     }
 
     // MARK: - Matches
 
-    func fetchMatches() -> SignalProducer<[Match], NSError> {
-        let request = mutableRequestWithURL(matchesURL, method: .GET)
-        return NSURLSession.sharedSession().rac_dataWithRequest(request)
+    func fetchMatches() -> SignalProducer<[Match], AnyError> {
+        let request = mutableRequestWithURL(matchesURL, method: .get)
+
+        return URLSession.shared.reactive.data(with: request)
             .map { data, response in
-                if let json = try? NSJSONSerialization.JSONObjectWithData(data, options: []),
+                if let json = try? JSONSerialization.jsonObject(with: data, options: []),
                   let matches: [Match] = decode(json) {
                     return matches
                 } else {
@@ -47,14 +50,14 @@ class RemoteStore: StoreType {
             }
     }
 
-    func createMatch(parameters: MatchParameters) -> SignalProducer<Bool, NSError> {
+    func createMatch(_ parameters: MatchParameters) -> SignalProducer<Bool, AnyError> {
 
-        let request = mutableRequestWithURL(matchesURL, method: .POST)
-        request.HTTPBody = httpBodyForMatchParameters(parameters)
+        var request = mutableRequestWithURL(matchesURL, method: .post)
+        request.httpBody = httpBodyForMatchParameters(parameters)
 
-        return NSURLSession.sharedSession().rac_dataWithRequest(request)
+        return URLSession.shared.reactive.data(with: request)
             .map { data, response in
-                if let httpResponse = response as? NSHTTPURLResponse {
+                if let httpResponse = response as? HTTPURLResponse {
                     return httpResponse.statusCode == 201
                 } else {
                     return false
@@ -62,14 +65,14 @@ class RemoteStore: StoreType {
             }
     }
 
-    func updateMatch(match: Match, parameters: MatchParameters) -> SignalProducer<Bool, NSError> {
+    func updateMatch(_ match: Match, parameters: MatchParameters) -> SignalProducer<Bool, AnyError> {
 
-        let request = mutableRequestWithURL(urlForMatch(match), method: .PUT)
-        request.HTTPBody = httpBodyForMatchParameters(parameters)
+        var request = mutableRequestWithURL(urlForMatch(match), method: .put)
+        request.httpBody = httpBodyForMatchParameters(parameters)
 
-        return NSURLSession.sharedSession().rac_dataWithRequest(request)
+        return URLSession.shared.reactive.data(with: request)
             .map { data, response in
-                if let httpResponse = response as? NSHTTPURLResponse {
+                if let httpResponse = response as? HTTPURLResponse {
                     return httpResponse.statusCode == 200
                 } else {
                     return false
@@ -77,12 +80,12 @@ class RemoteStore: StoreType {
             }
     }
 
-    func deleteMatch(match: Match) -> SignalProducer<Bool, NSError> {
-        let request = mutableRequestWithURL(urlForMatch(match), method: .DELETE)
+    func deleteMatch(_ match: Match) -> SignalProducer<Bool, AnyError> {
+        let request = mutableRequestWithURL(urlForMatch(match), method: .delete)
 
-        return NSURLSession.sharedSession().rac_dataWithRequest(request)
+        return URLSession.shared.reactive.data(with: request)
             .map { data, response in
-                if let httpResponse = response as? NSHTTPURLResponse {
+                if let httpResponse = response as? HTTPURLResponse {
                     return httpResponse.statusCode == 200
                 } else {
                     return false
@@ -92,11 +95,11 @@ class RemoteStore: StoreType {
 
     // MARK: Players
 
-    func fetchPlayers() -> SignalProducer<[Player], NSError> {
-        let request = NSURLRequest(URL: playersURL)
-        return NSURLSession.sharedSession().rac_dataWithRequest(request)
+    func fetchPlayers() -> SignalProducer<[Player], AnyError> {
+        let request = URLRequest(url: playersURL)
+        return URLSession.shared.reactive.data(with: request)
             .map { data, response in
-                if let json = try? NSJSONSerialization.JSONObjectWithData(data, options: []),
+                if let json = try? JSONSerialization.jsonObject(with: data, options: []),
                     let players: [Player] = decode(json) {
                     return players
                 } else {
@@ -105,13 +108,13 @@ class RemoteStore: StoreType {
             }
     }
 
-    func createPlayerWithName(name: String) -> SignalProducer<Bool, NSError> {
-        let request = mutableRequestWithURL(playersURL, method: .POST)
-        request.HTTPBody = httpBodyForPlayerName(name)
+    func createPlayerWithName(_ name: String) -> SignalProducer<Bool, AnyError> {
+        var request = mutableRequestWithURL(playersURL, method: .post)
+        request.httpBody = httpBodyForPlayerName(name)
 
-        return NSURLSession.sharedSession().rac_dataWithRequest(request)
+        return URLSession.shared.reactive.data(with: request)
             .map { data, response in
-                if let httpResponse = response as? NSHTTPURLResponse {
+                if let httpResponse = response as? HTTPURLResponse {
                     return httpResponse.statusCode == 201
                 } else {
                     return false
@@ -121,11 +124,11 @@ class RemoteStore: StoreType {
 
     // MARK: Rankings
 
-    func fetchRankings() -> SignalProducer<[Ranking], NSError> {
-        let request = NSURLRequest(URL: rankingsURL)
-        return NSURLSession.sharedSession().rac_dataWithRequest(request)
+    func fetchRankings() -> SignalProducer<[Ranking], AnyError> {
+        let request = URLRequest(url: rankingsURL)
+        return URLSession.shared.reactive.data(with: request)
             .map { data, response in
-                if let json = try? NSJSONSerialization.JSONObjectWithData(data, options: []),
+                if let json = try? JSONSerialization.jsonObject(with: data, options: []),
                     let rankings: [Ranking] = decode(json) {
                     return rankings
                 } else {
@@ -136,43 +139,43 @@ class RemoteStore: StoreType {
 
     // MARK: Private Helpers
 
-    private func httpBodyForMatchParameters(parameters: MatchParameters) -> NSData? {
+    fileprivate func httpBodyForMatchParameters(_ parameters: MatchParameters) -> Data? {
         let jsonObject = [
             "home_player_ids": Array(parameters.homePlayers).map { $0.identifier },
             "away_player_ids": Array(parameters.awayPlayers).map { $0.identifier },
             "home_goals": parameters.homeGoals,
             "away_goals": parameters.awayGoals
-        ]
+        ] as [String : Any]
 
-        return try? NSJSONSerialization.dataWithJSONObject(jsonObject, options: [])
+        return try? JSONSerialization.data(withJSONObject: jsonObject, options: [])
     }
 
-    private func httpBodyForPlayerName(name: String) -> NSData? {
+    fileprivate func httpBodyForPlayerName(_ name: String) -> Data? {
         let jsonObject = [
             "name": name
         ]
 
-        return try? NSJSONSerialization.dataWithJSONObject(jsonObject, options: [])
+        return try? JSONSerialization.data(withJSONObject: jsonObject, options: [])
     }
 
-    private func urlForMatch(match: Match) -> NSURL {
-        return matchesURL.URLByAppendingPathComponent(match.identifier)!
+    fileprivate func urlForMatch(_ match: Match) -> URL {
+        return matchesURL.appendingPathComponent(match.identifier)
     }
 
-    private func mutableRequestWithURL(url: NSURL, method: RequestMethod) -> NSMutableURLRequest {
-        let request = NSMutableURLRequest(URL: url)
+    fileprivate func mutableRequestWithURL(_ url: URL, method: RequestMethod) -> URLRequest {
+        var request = URLRequest(url: url)
 
         switch method {
-            case .GET:
-                request.HTTPMethod = "GET"
-            case .POST:
-                request.HTTPMethod = "POST"
+            case .get:
+                request.httpMethod = "GET"
+            case .post:
+                request.httpMethod = "POST"
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            case .PUT:
-                request.HTTPMethod = "PUT"
+            case .put:
+                request.httpMethod = "PUT"
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            case .DELETE:
-                request.HTTPMethod = "DELETE"
+            case .delete:
+                request.httpMethod = "DELETE"
         }
 
         return request

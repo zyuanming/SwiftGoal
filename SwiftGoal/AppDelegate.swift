@@ -16,17 +16,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let tabBarController = UITabBarController()
 
     // Keys and default values for Settings
-    private let useRemoteStoreSettingKey = "use_remote_store_setting"
-    private let useRemoteStoreSettingDefault = false
-    private let baseURLSettingKey = "base_url_setting"
-    private let baseURLSettingDefault = "http://localhost:3000/api/v1/"
+    fileprivate let useRemoteStoreSettingKey = "use_remote_store_setting"
+    fileprivate let useRemoteStoreSettingDefault = false
+    fileprivate let baseURLSettingKey = "base_url_setting"
+    fileprivate let baseURLSettingDefault = "http://localhost:3000/api/v1/"
 
-    func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
-        window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        window = UIWindow(frame: UIScreen.main.bounds)
         customizeAppAppearance()
 
-        let userDefaults = NSUserDefaults.standardUserDefaults()
+        let userDefaults = UserDefaults.standard
         registerInitialSettings(userDefaults)
 
         // Set tab-level view controllers with appropriate store
@@ -34,9 +34,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         tabBarController.viewControllers = tabViewControllersForStore(store)
 
         // Register for settings changes as store might have changed
-        NSNotificationCenter.defaultCenter().addObserver(self,
+        NotificationCenter.default.addObserver(self,
             selector: #selector(userDefaultsDidChange(_:)),
-            name: NSUserDefaultsDidChangeNotification,
+            name: UserDefaults.didChangeNotification,
             object: nil)
 
         window?.rootViewController = tabBarController
@@ -45,14 +45,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
-    func applicationWillTerminate(application: UIApplication) {
+    func applicationWillTerminate(_ application: UIApplication) {
         archiveStoreIfLocal()
     }
 
     // MARK: Notifications
 
-    func userDefaultsDidChange(notification: NSNotification) {
-        if let userDefaults = notification.object as? NSUserDefaults {
+    func userDefaultsDidChange(_ notification: Notification) {
+        if let userDefaults = notification.object as? UserDefaults {
             archiveStoreIfLocal()
             store = storeForUserDefaults(userDefaults)
             tabBarController.viewControllers = tabViewControllersForStore(store)
@@ -61,43 +61,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // MARK: Private Helpers
 
-    private func customizeAppAppearance() {
-        UIApplication.sharedApplication().statusBarStyle = .LightContent
+    fileprivate func customizeAppAppearance() {
+        UIApplication.shared.statusBarStyle = .lightContent
         let tintColor = Color.primaryColor
         window?.tintColor = tintColor
         UINavigationBar.appearance().barTintColor = tintColor
-        UINavigationBar.appearance().tintColor = UIColor.whiteColor()
+        UINavigationBar.appearance().tintColor = UIColor.white
         UINavigationBar.appearance().titleTextAttributes = [
             NSFontAttributeName: UIFont(name: "OpenSans-Semibold", size: 20)!,
-            NSForegroundColorAttributeName: UIColor.whiteColor()
+            NSForegroundColorAttributeName: UIColor.white
         ]
-        UINavigationBar.appearance().translucent = false
+        UINavigationBar.appearance().isTranslucent = false
         UIBarButtonItem.appearance().setTitleTextAttributes(
             [NSFontAttributeName: UIFont(name: "OpenSans", size: 17)!],
-            forState: .Normal
+            for: UIControlState()
         )
     }
 
-    private func registerInitialSettings(userDefaults: NSUserDefaults) {
-        if userDefaults.objectForKey(useRemoteStoreSettingKey) == nil {
-            userDefaults.setBool(useRemoteStoreSettingDefault, forKey: useRemoteStoreSettingKey)
+    fileprivate func registerInitialSettings(_ userDefaults: UserDefaults) {
+        if userDefaults.object(forKey: useRemoteStoreSettingKey) == nil {
+            userDefaults.set(useRemoteStoreSettingDefault, forKey: useRemoteStoreSettingKey)
         }
-        if userDefaults.stringForKey(baseURLSettingKey) == nil {
-            userDefaults.setObject(baseURLSettingDefault, forKey: baseURLSettingKey)
+        if userDefaults.string(forKey: baseURLSettingKey) == nil {
+            userDefaults.set(baseURLSettingDefault, forKey: baseURLSettingKey)
         }
     }
 
     /// Archives the current store to disk if it's a local store.
-    private func archiveStoreIfLocal() {
+    fileprivate func archiveStoreIfLocal() {
         if let localStore = store as? LocalStore {
             localStore.archiveToDisk()
         }
     }
 
-    private func storeForUserDefaults(userDefaults: NSUserDefaults) -> StoreType {
-        if userDefaults.boolForKey(useRemoteStoreSettingKey) == true {
+    fileprivate func storeForUserDefaults(_ userDefaults: UserDefaults) -> StoreType {
+        if userDefaults.bool(forKey: useRemoteStoreSettingKey) == true {
             // Create remote store
-            let baseURLString = userDefaults.stringForKey(baseURLSettingKey) ?? baseURLSettingDefault
+            let baseURLString = userDefaults.string(forKey: baseURLSettingKey) ?? baseURLSettingDefault
             let baseURL = baseURLFromString(baseURLString)
             return RemoteStore(baseURL: baseURL)
         } else {
@@ -108,7 +108,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    private func baseURLFromString(string: String) -> NSURL {
+    fileprivate func baseURLFromString(_ string: String) -> URL {
         var baseURLString = string
 
         // Append forward slash if needed to ensure proper relative URL behavior
@@ -117,10 +117,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             baseURLString.append(forwardSlash)
         }
 
-        return NSURL(string: baseURLString) ?? NSURL(string: baseURLSettingDefault)!
+        return URL(string: baseURLString) ?? URL(string: baseURLSettingDefault)!
     }
 
-    private func tabViewControllersForStore(store: StoreType?) -> [UIViewController] {
+    fileprivate func tabViewControllersForStore(_ store: StoreType?) -> [UIViewController] {
         guard let store = store else { return [] }
 
         let matchesViewModel = MatchesViewModel(store: store)

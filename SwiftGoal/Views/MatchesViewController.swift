@@ -9,11 +9,12 @@
 import DZNEmptyDataSet
 import ReactiveCocoa
 import Result
+import ReactiveSwift
 
 class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZNEmptyDataSetSource {
 
-    private let matchCellIdentifier = "MatchCell"
-    private let viewModel: MatchesViewModel
+    fileprivate let matchCellIdentifier = "MatchCell"
+    fileprivate let viewModel: MatchesViewModel
 
     // MARK: - Lifecycle
 
@@ -42,15 +43,15 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
         self.refreshControl = UIRefreshControl()
         self.refreshControl?.addTarget(self,
             action: #selector(refreshControlTriggered),
-            forControlEvents: .ValueChanged
+            for: .valueChanged
         )
 
-        tableView.registerClass(MatchCell.self, forCellReuseIdentifier: matchCellIdentifier)
+        tableView.register(MatchCell.self, forCellReuseIdentifier: matchCellIdentifier)
 
-        self.navigationItem.leftBarButtonItem = self.editButtonItem()
+        self.navigationItem.leftBarButtonItem = self.editButtonItem
 
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .Add,
+            barButtonSystemItem: .add,
             target: self,
             action: #selector(addMatchButtonTapped)
         )
@@ -60,41 +61,41 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
 
     // MARK: - Bindings
 
-    private func bindViewModel() {
+    fileprivate func bindViewModel() {
         self.title = viewModel.title
 
         viewModel.active <~ isActive()
 
         viewModel.contentChangesSignal
-            .observeOn(UIScheduler())
-            .observeNext({ [weak self] changeset in
+            .observe(on: UIScheduler())
+            .observeValues({ [weak self] changeset in
                 guard let tableView = self?.tableView else { return }
 
                 tableView.beginUpdates()
-                tableView.deleteRowsAtIndexPaths(changeset.deletions, withRowAnimation: .Automatic)
-                tableView.reloadRowsAtIndexPaths(changeset.modifications, withRowAnimation: .Automatic)
-                tableView.insertRowsAtIndexPaths(changeset.insertions, withRowAnimation: .Automatic)
+                tableView.deleteRows(at: changeset.deletions, with: .automatic)
+                tableView.reloadRows(at: changeset.modifications, with: .automatic)
+                tableView.insertRows(at: changeset.insertions, with: .automatic)
                 tableView.endUpdates()
             })
 
         viewModel.isLoading.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] isLoading in
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] isLoading in
                 if !isLoading {
                     self?.refreshControl?.endRefreshing()
                 }
             })
 
         viewModel.alertMessageSignal
-            .observeOn(UIScheduler())
-            .observeNext({ [weak self] alertMessage in
+            .observe(on: UIScheduler())
+            .observeValues({ [weak self] alertMessage in
                 let alertController = UIAlertController(
                     title: "Oops!",
                     message: alertMessage,
-                    preferredStyle: .Alert
+                    preferredStyle: .alert
                 )
-                alertController.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
-                self?.presentViewController(alertController, animated: true, completion: nil)
+                alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+                self?.present(alertController, animated: true, completion: nil)
             })
     }
 
@@ -104,24 +105,24 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
         let newMatchViewModel = viewModel.editViewModelForNewMatch()
         let newMatchViewController = EditMatchViewController(viewModel: newMatchViewModel)
         let newMatchNavigationController = UINavigationController(rootViewController: newMatchViewController)
-        self.presentViewController(newMatchNavigationController, animated: true, completion: nil)
+        self.present(newMatchNavigationController, animated: true, completion: nil)
     }
 
     func refreshControlTriggered() {
-        viewModel.refreshObserver.sendNext(())
+        viewModel.refreshObserver.send(value: ())
     }
 
     // MARK: DZNEmptyDataSetDelegate
 
-    func emptyDataSetDidTapButton(scrollView: UIScrollView!) {
-        if let settingsURL = NSURL(string: UIApplicationOpenSettingsURLString) {
-            UIApplication.sharedApplication().openURL(settingsURL)
+    func emptyDataSetDidTapButton(_ scrollView: UIScrollView!) {
+        if let settingsURL = URL(string: UIApplicationOpenSettingsURLString) {
+            UIApplication.shared.openURL(settingsURL)
         }
     }
 
     // MARK: DZNEmptyDataSetSource
 
-    func titleForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+    func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         let text = "No matches yet!"
         let attributes = [
             NSFontAttributeName: UIFont(name: "OpenSans-Semibold", size: 30)!
@@ -129,20 +130,20 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
         return NSAttributedString(string: text, attributes: attributes)
     }
 
-    func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+    func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         let text = "Check your storage settings, then tap the “+” button to get started."
         let attributes = [
             NSFontAttributeName: UIFont(name: "OpenSans", size: 20)!,
-            NSForegroundColorAttributeName: UIColor.lightGrayColor()
+            NSForegroundColorAttributeName: UIColor.lightGray
         ]
         return NSAttributedString(string: text, attributes: attributes)
     }
 
-    func buttonTitleForEmptyDataSet(scrollView: UIScrollView!, forState state: UIControlState) -> NSAttributedString! {
+    func buttonTitle(forEmptyDataSet scrollView: UIScrollView!, for state: UIControlState) -> NSAttributedString! {
         let text = "Open App Settings"
         let attributes = [
             NSFontAttributeName: UIFont(name: "OpenSans", size: 20)!,
-            NSForegroundColorAttributeName: (state == .Normal
+            NSForegroundColorAttributeName: (state == UIControlState()
                 ? Color.primaryColor
                 : Color.lighterPrimaryColor)
         ]
@@ -151,16 +152,16 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
 
     // MARK: - UITableViewDataSource
 
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return viewModel.numberOfSections()
     }
 
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.numberOfMatchesInSection(section)
     }
 
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(matchCellIdentifier, forIndexPath: indexPath) as! MatchCell
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: matchCellIdentifier, for: indexPath) as! MatchCell
 
         cell.homePlayersLabel.text = viewModel.homePlayersAtIndexPath(indexPath)
         cell.resultLabel.text = viewModel.resultAtIndexPath(indexPath)
@@ -169,20 +170,20 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
         return cell
     }
 
-    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == .Delete {
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
             viewModel.deleteAction.apply(indexPath).start()
         }
     }
 
     // MARK: UITableViewDelegate
 
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
 
         let editMatchViewModel = viewModel.editViewModelForMatchAtIndexPath(indexPath)
         let editMatchViewController = EditMatchViewController(viewModel: editMatchViewModel)
         let editMatchNavigationController = UINavigationController(rootViewController: editMatchViewController)
-        self.presentViewController(editMatchNavigationController, animated: true, completion: nil)
+        self.present(editMatchNavigationController, animated: true, completion: nil)
     }
 }

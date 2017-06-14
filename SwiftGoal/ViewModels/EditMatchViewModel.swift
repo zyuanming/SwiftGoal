@@ -7,6 +7,8 @@
 //
 
 import ReactiveCocoa
+import ReactiveSwift
+import Result
 
 class EditMatchViewModel {
 
@@ -23,7 +25,7 @@ class EditMatchViewModel {
     let inputIsValid = MutableProperty<Bool>(false)
 
     // Actions
-    lazy var saveAction: Action<Void, Bool, NSError> = { [unowned self] in
+    lazy var saveAction: Action<Void, Bool, AnyError> = { [unowned self] in
         return Action(enabledIf: self.inputIsValid, { _ in
             let parameters = MatchParameters(
                 homePlayers: self.homePlayers.value,
@@ -39,10 +41,10 @@ class EditMatchViewModel {
         })
     }()
 
-    private let store: StoreType
-    private let match: Match?
-    private let homePlayers: MutableProperty<Set<Player>>
-    private let awayPlayers: MutableProperty<Set<Player>>
+    fileprivate let store: StoreType
+    fileprivate let match: Match?
+    fileprivate let homePlayers: MutableProperty<Set<Player>>
+    fileprivate let awayPlayers: MutableProperty<Set<Player>>
 
     // MARK: Lifecycle
 
@@ -62,13 +64,13 @@ class EditMatchViewModel {
 
         self.homePlayersString <~ homePlayers.producer
             .map { players in
-                return players.isEmpty ? "Set Home Players" : players.map({ $0.name }).joinWithSeparator(", ")
+                return players.isEmpty ? "Set Home Players" : players.map({ $0.name }).joined(separator: ", ")
             }
         self.awayPlayersString <~ awayPlayers.producer
             .map { players in
-                return players.isEmpty ? "Set Away Players" : players.map({ $0.name }).joinWithSeparator(", ")
+                return players.isEmpty ? "Set Away Players" : players.map({ $0.name }).joined(separator: ", ")
             }
-        self.inputIsValid <~ combineLatest(homePlayers.producer, awayPlayers.producer)
+        self.inputIsValid <~ SignalProducer.combineLatest(homePlayers.producer, awayPlayers.producer)
             .map { (homePlayers, awayPlayers) in
                 return !homePlayers.isEmpty && !awayPlayers.isEmpty
             }

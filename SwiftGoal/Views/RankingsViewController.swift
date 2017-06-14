@@ -8,11 +8,13 @@
 
 import ReactiveCocoa
 import Result
+import UIKit
+import ReactiveSwift
 
 class RankingsViewController: UITableViewController {
 
-    private let rankingCellIdentifier = "RankingCell"
-    private let viewModel: RankingsViewModel
+    fileprivate let rankingCellIdentifier = "RankingCell"
+    fileprivate let viewModel: RankingsViewModel
 
     // MARK: Lifecycle
 
@@ -34,12 +36,12 @@ class RankingsViewController: UITableViewController {
         tableView.rowHeight = 60
         tableView.tableFooterView = UIView() // Prevent empty rows at bottom
 
-        tableView.registerClass(RankingCell.self, forCellReuseIdentifier: rankingCellIdentifier)
+        tableView.register(RankingCell.self, forCellReuseIdentifier: rankingCellIdentifier)
 
         self.refreshControl = UIRefreshControl()
         self.refreshControl?.addTarget(self,
             action: #selector(refreshControlTriggered),
-            forControlEvents: .ValueChanged
+            for: .valueChanged
         )
 
         bindViewModel()
@@ -47,62 +49,62 @@ class RankingsViewController: UITableViewController {
 
     // MARK: Bindings
 
-    private func bindViewModel() {
+    fileprivate func bindViewModel() {
         self.title = viewModel.title
 
         viewModel.active <~ isActive()
 
         viewModel.contentChangesSignal
-            .observeOn(UIScheduler())
-            .observeNext({ [weak self] changeset in
+            .observe(on: UIScheduler())
+            .observeValues({ [weak self] changeset in
                 guard let tableView = self?.tableView else { return }
 
                 tableView.beginUpdates()
-                tableView.deleteRowsAtIndexPaths(changeset.deletions, withRowAnimation: .Automatic)
-                tableView.reloadRowsAtIndexPaths(changeset.modifications, withRowAnimation: .Automatic)
-                tableView.insertRowsAtIndexPaths(changeset.insertions, withRowAnimation: .Automatic)
+                tableView.deleteRows(at: changeset.deletions, with: .automatic)
+                tableView.reloadRows(at: changeset.modifications, with: .automatic)
+                tableView.insertRows(at: changeset.insertions, with: .automatic)
                 tableView.endUpdates()
             })
 
         viewModel.isLoading.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] isLoading in
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] isLoading in
                 if !isLoading {
                     self?.refreshControl?.endRefreshing()
                 }
             })
 
         viewModel.alertMessageSignal
-            .observeOn(UIScheduler())
-            .observeNext({ [weak self] alertMessage in
+            .observe(on: UIScheduler())
+            .observeValues({ [weak self] alertMessage in
                 let alertController = UIAlertController(
                     title: "Oops!",
                     message: alertMessage,
-                    preferredStyle: .Alert
+                    preferredStyle: .alert
                 )
-                alertController.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
-                self?.presentViewController(alertController, animated: true, completion: nil)
+                alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+                self?.present(alertController, animated: true, completion: nil)
             })
     }
 
     // MARK: User Interaction
 
     func refreshControlTriggered() {
-        viewModel.refreshObserver.sendNext(())
+        viewModel.refreshObserver.send(value: ())
     }
 
     // MARK: UITableViewDataSource
 
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return viewModel.numberOfSections()
     }
 
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.numberOfRankingsInSection(section)
     }
 
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(rankingCellIdentifier, forIndexPath: indexPath) as! RankingCell
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: rankingCellIdentifier, for: indexPath) as! RankingCell
 
         cell.playerNameLabel.text = viewModel.playerNameAtIndexPath(indexPath)
         cell.ratingLabel.text = viewModel.ratingAtIndexPath(indexPath)

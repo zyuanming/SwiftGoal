@@ -8,11 +8,13 @@
 
 import ReactiveCocoa
 import Result
+import ReactiveSwift
+import UIKit
 
 class ManagePlayersViewController: UITableViewController {
 
-    private let playerCellIdentifier = "PlayerCell"
-    private let viewModel: ManagePlayersViewModel
+    fileprivate let playerCellIdentifier = "PlayerCell"
+    fileprivate let viewModel: ManagePlayersViewModel
 
     // MARK: Lifecycle
 
@@ -33,16 +35,16 @@ class ManagePlayersViewController: UITableViewController {
         tableView.rowHeight = 60
         tableView.tableFooterView = UIView() // Prevent empty rows at bottom
 
-        tableView.registerClass(PlayerCell.self, forCellReuseIdentifier: playerCellIdentifier)
+        tableView.register(PlayerCell.self, forCellReuseIdentifier: playerCellIdentifier)
 
         self.refreshControl = UIRefreshControl()
         self.refreshControl?.addTarget(self,
             action: #selector(refreshControlTriggered),
-            forControlEvents: .ValueChanged
+            for: .valueChanged
         )
 
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .Add,
+            barButtonSystemItem: .add,
             target: self,
             action: #selector(addPlayerButtonTapped)
         )
@@ -52,41 +54,41 @@ class ManagePlayersViewController: UITableViewController {
 
     // MARK: Bindings
 
-    private func bindViewModel() {
+    fileprivate func bindViewModel() {
         self.title = viewModel.title
 
         viewModel.active <~ isActive()
         
         viewModel.contentChangesSignal
-            .observeOn(UIScheduler())
-            .observeNext({ [weak self] changeset in
+            .observe(on: UIScheduler())
+            .observeValues({ [weak self] changeset in
                 guard let tableView = self?.tableView else { return }
 
                 tableView.beginUpdates()
-                tableView.deleteRowsAtIndexPaths(changeset.deletions, withRowAnimation: .Automatic)
-                tableView.reloadRowsAtIndexPaths(changeset.modifications, withRowAnimation: .Automatic)
-                tableView.insertRowsAtIndexPaths(changeset.insertions, withRowAnimation: .Automatic)
+                tableView.deleteRows(at: changeset.deletions, with: .automatic)
+                tableView.reloadRows(at: changeset.modifications, with: .automatic)
+                tableView.insertRows(at: changeset.insertions, with: .automatic)
                 tableView.endUpdates()
             })
 
         viewModel.isLoading.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] isLoading in
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] isLoading in
                 if !isLoading {
                     self?.refreshControl?.endRefreshing()
                 }
             })
 
         viewModel.alertMessageSignal
-            .observeOn(UIScheduler())
-            .observeNext({ [weak self] alertMessage in
+            .observe(on: UIScheduler())
+            .observeValues({ [weak self] alertMessage in
                 let alertController = UIAlertController(
                     title: "Oops!",
                     message: alertMessage,
-                    preferredStyle: .Alert
+                    preferredStyle: .alert
                 )
-                alertController.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
-                self?.presentViewController(alertController, animated: true, completion: nil)
+                alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+                self?.present(alertController, animated: true, completion: nil)
             })
     }
 
@@ -94,76 +96,76 @@ class ManagePlayersViewController: UITableViewController {
 
     func addPlayerButtonTapped() {
         let newPlayerViewController = self.newPlayerViewController()
-        presentViewController(newPlayerViewController, animated: true, completion: nil)
+        present(newPlayerViewController, animated: true, completion: nil)
     }
 
     func refreshControlTriggered() {
-        viewModel.refreshObserver.sendNext(())
+        viewModel.refreshObserver.send(value: ())
     }
 
     // MARK: UITableViewDataSource
 
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return viewModel.numberOfSections()
     }
 
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.numberOfPlayersInSection(section)
     }
 
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(playerCellIdentifier, forIndexPath: indexPath) as! PlayerCell
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: playerCellIdentifier, for: indexPath) as! PlayerCell
 
-        cell.nameLabel.enabled = viewModel.canSelectPlayerAtIndexPath(indexPath)
+        cell.nameLabel.isEnabled = viewModel.canSelectPlayerAtIndexPath(indexPath)
         cell.nameLabel.text = viewModel.playerNameAtIndexPath(indexPath)
-        cell.accessoryType = viewModel.isPlayerSelectedAtIndexPath(indexPath) ? .Checkmark : .None
+        cell.accessoryType = viewModel.isPlayerSelectedAtIndexPath(indexPath) ? .checkmark : .none
 
         return cell
     }
 
     // MARK: UITableViewDelegate
 
-    override func tableView(tableView: UITableView, willSelectRowAtIndexPath indexPath: NSIndexPath) -> NSIndexPath? {
+    override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
         return viewModel.canSelectPlayerAtIndexPath(indexPath) ? indexPath : nil
     }
 
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
 
-        let cell = tableView.cellForRowAtIndexPath(indexPath)
+        let cell = tableView.cellForRow(at: indexPath)
 
         if viewModel.isPlayerSelectedAtIndexPath(indexPath) {
             viewModel.deselectPlayerAtIndexPath(indexPath)
-            cell?.accessoryType = .None
+            cell?.accessoryType = .none
         } else {
             viewModel.selectPlayerAtIndexPath(indexPath)
-            cell?.accessoryType = .Checkmark
+            cell?.accessoryType = .checkmark
         }
     }
 
     // MARK: Private Helpers
 
-    private func newPlayerViewController() -> UIViewController {
+    fileprivate func newPlayerViewController() -> UIViewController {
         let newPlayerViewController = UIAlertController(
             title: "New Player",
             message: nil,
-            preferredStyle: .Alert
+            preferredStyle: .alert
         )
 
         // Add user actions
-        newPlayerViewController.addAction(UIAlertAction(title: "Cancel", style: .Cancel, handler: nil))
-        let saveAction = UIAlertAction(title: "Save", style: .Default, handler: { [weak self] _ in
+        newPlayerViewController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        let saveAction = UIAlertAction(title: "Save", style: .default, handler: { [weak self] _ in
             self?.viewModel.saveAction.apply().start()
         })
         newPlayerViewController.addAction(saveAction)
 
         // Allow saving only with valid input
-        viewModel.inputIsValid.producer.startWithNext({ isValid in
-            saveAction.enabled = isValid
+        viewModel.inputIsValid.producer.startWithValues({ isValid in
+            saveAction.isEnabled = isValid
         })
 
         // Add user input fields
-        newPlayerViewController.addTextFieldWithConfigurationHandler { textField in
+        newPlayerViewController.addTextField { textField in
             textField.placeholder = "Player name"
         }
 

@@ -8,6 +8,7 @@
 
 import ReactiveCocoa
 import Result
+import ReactiveSwift
 
 class ManagePlayersViewModel {
 
@@ -27,18 +28,18 @@ class ManagePlayersViewModel {
     let inputIsValid = MutableProperty(false)
 
     // Actions
-    lazy var saveAction: Action<Void, Bool, NSError> = { [unowned self] in
-        return Action(enabledIf: self.inputIsValid, { _ in
+    lazy var saveAction: Action<Void, Bool, AnyError> = { [unowned self] in
+        return Action<Void, Bool, AnyError>(enabledIf: self.inputIsValid, { _ in
             return self.store.createPlayerWithName(self.playerName.value)
         })
     }()
 
-    private let store: StoreType
-    private let contentChangesObserver: Observer<PlayerChangeset, NoError>
-    private let alertMessageObserver: Observer<String, NoError>
-    private let disabledPlayers: Set<Player>
+    fileprivate let store: StoreType
+    fileprivate let contentChangesObserver: Observer<PlayerChangeset, NoError>
+    fileprivate let alertMessageObserver: Observer<String, NoError>
+    fileprivate let disabledPlayers: Set<Player>
 
-    private var players: [Player]
+    fileprivate var players: [Player]
 
     // MARK: Lifecycle
 
@@ -73,18 +74,18 @@ class ManagePlayersViewModel {
             .map { _ in () }
             .observe(refreshObserver)
 
-        SignalProducer(signal: refreshSignal)
-            .on(next: { _ in isLoading.value = true })
-            .flatMap(.Latest, transform: { _ in
+        SignalProducer(refreshSignal)
+            .on(starting: { _ in isLoading.value = true })
+            .flatMap(.latest, transform: { _ in
                 return store.fetchPlayers()
                     .flatMapError { error in
-                        alertMessageObserver.sendNext(error.localizedDescription)
+                        alertMessageObserver.send(value: error.localizedDescription)
                         return SignalProducer(value: [])
                     }
             })
-            .on(next: { _ in isLoading.value = false })
+            .on(starting: { _ in isLoading.value = false })
             .combinePrevious([]) // Preserve history to calculate changeset
-            .startWithNext({ [weak self] (oldPlayers, newPlayers) in
+            .startWithValues({ [weak self] (oldPlayers, newPlayers) in
                 self?.players = newPlayers
                 if let observer = self?.contentChangesObserver {
                     let changeset = Changeset(
@@ -92,7 +93,7 @@ class ManagePlayersViewModel {
                         newItems: newPlayers,
                         contentMatches: Player.contentMatches
                     )
-                    observer.sendNext(changeset)
+                    observer.send(value: changeset)
                 }
             })
 
@@ -110,39 +111,39 @@ class ManagePlayersViewModel {
         return 1
     }
 
-    func numberOfPlayersInSection(section: Int) -> Int {
+    func numberOfPlayersInSection(_ section: Int) -> Int {
         return players.count
     }
 
-    func playerNameAtIndexPath(indexPath: NSIndexPath) -> String {
+    func playerNameAtIndexPath(_ indexPath: IndexPath) -> String {
         return playerAtIndexPath(indexPath).name
     }
 
-    func isPlayerSelectedAtIndexPath(indexPath: NSIndexPath) -> Bool {
+    func isPlayerSelectedAtIndexPath(_ indexPath: IndexPath) -> Bool {
         let player = playerAtIndexPath(indexPath)
         return selectedPlayers.value.contains(player)
     }
 
-    func canSelectPlayerAtIndexPath(indexPath: NSIndexPath) -> Bool {
+    func canSelectPlayerAtIndexPath(_ indexPath: IndexPath) -> Bool {
         let player = playerAtIndexPath(indexPath)
         return !disabledPlayers.contains(player)
     }
 
     // MARK: Player Selection
 
-    func selectPlayerAtIndexPath(indexPath: NSIndexPath) {
+    func selectPlayerAtIndexPath(_ indexPath: IndexPath) {
         let player = playerAtIndexPath(indexPath)
         selectedPlayers.value.insert(player)
     }
 
-    func deselectPlayerAtIndexPath(indexPath: NSIndexPath) {
+    func deselectPlayerAtIndexPath(_ indexPath: IndexPath) {
         let player = playerAtIndexPath(indexPath)
         selectedPlayers.value.remove(player)
     }
 
     // MARK: Internal Helpers
 
-    private func playerAtIndexPath(indexPath: NSIndexPath) -> Player {
+    fileprivate func playerAtIndexPath(_ indexPath: IndexPath) -> Player {
         return players[indexPath.row]
     }
 }

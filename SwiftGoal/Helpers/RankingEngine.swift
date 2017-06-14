@@ -7,16 +7,16 @@
 //
 
 class RankingEngine {
-    private let pointsForWin = 3
-    private let pointsForTie = 1
-    private let pointsForLoss = 0
+    fileprivate let pointsForWin = 3
+    fileprivate let pointsForTie = 1
+    fileprivate let pointsForLoss = 0
 
-    private enum Side {
-        case Home
-        case Away
+    fileprivate enum Side {
+        case home
+        case away
     }
 
-    func rankingsForPlayers(players: [Player], fromMatches matches: [Match]) -> [Ranking] {
+    func rankingsForPlayers(_ players: [Player], fromMatches matches: [Match]) -> [Ranking] {
         if players.isEmpty {
             return []
         }
@@ -31,12 +31,12 @@ class RankingEngine {
             let homeMatches = matches.filter { $0.homePlayers.contains(player) }
             let awayMatches = matches.filter { $0.awayPlayers.contains(player) }
 
-            let homePoints = homeMatches.reduce(0, combine: { sum, match in
-                return sum + pointsFromMatch(match, forSide: .Home)
+            let homePoints = homeMatches.reduce(0, { sum, match in
+                return sum + pointsFromMatch(match, forSide: .home)
             })
 
-            let awayPoints = awayMatches.reduce(0, combine: { sum, match in
-                return sum + pointsFromMatch(match, forSide: .Away)
+            let awayPoints = awayMatches.reduce(0, { sum, match in
+                return sum + pointsFromMatch(match, forSide: .away)
             })
 
             let maxHomePoints = homeMatches.count * pointsForWin
@@ -46,16 +46,16 @@ class RankingEngine {
             return Ranking(player: player, rating: rating)
         }
 
-        return rankings.sort { lhs, rhs in lhs.rating > rhs.rating }
+        return rankings.sorted { lhs, rhs in lhs.rating > rhs.rating }
     }
 
     // MARK: Private Helpers
 
-    private func pointsFromMatch(match: Match, forSide side: Side) -> Int {
+    fileprivate func pointsFromMatch(_ match: Match, forSide side: Side) -> Int {
         if match.homeGoals > match.awayGoals {
-            return side == .Home ? pointsForWin : pointsForLoss
+            return side == .home ? pointsForWin : pointsForLoss
         } else if match.awayGoals > match.homeGoals {
-            return side == .Home ? pointsForLoss : pointsForWin
+            return side == .home ? pointsForLoss : pointsForWin
         } else {
             return pointsForTie
         }

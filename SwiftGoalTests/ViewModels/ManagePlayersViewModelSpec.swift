@@ -10,6 +10,7 @@ import Quick
 import Nimble
 import ReactiveCocoa
 @testable import SwiftGoal
+import ReactiveSwift
 
 class ManagePlayersViewModelSpec: QuickSpec {
     override func spec() {
@@ -43,9 +44,9 @@ class ManagePlayersViewModelSpec: QuickSpec {
                 it("has the right players selected") {
                     managePlayersViewModel.active.value = true
 
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
-                    let indexPath3 = NSIndexPath(forRow: 2, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
+                    let indexPath3 = IndexPath(row: 2, section: 0)
 
                     expect(managePlayersViewModel.isPlayerSelectedAtIndexPath(indexPath1)).to(beTrue())
                     expect(managePlayersViewModel.isPlayerSelectedAtIndexPath(indexPath2)).to(beTrue())
@@ -65,9 +66,9 @@ class ManagePlayersViewModelSpec: QuickSpec {
                 it("allows the right players to be selected") {
                     managePlayersViewModel.active.value = true
 
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
-                    let indexPath3 = NSIndexPath(forRow: 2, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
+                    let indexPath3 = IndexPath(row: 2, section: 0)
 
                     expect(managePlayersViewModel.canSelectPlayerAtIndexPath(indexPath1)).to(beFalse())
                     expect(managePlayersViewModel.canSelectPlayerAtIndexPath(indexPath2)).to(beFalse())
@@ -93,10 +94,10 @@ class ManagePlayersViewModelSpec: QuickSpec {
                 }
 
                 it("displays the right player names") {
-                    let indexPath1 = NSIndexPath(forRow: 0, inSection: 0)
-                    let indexPath2 = NSIndexPath(forRow: 1, inSection: 0)
-                    let indexPath3 = NSIndexPath(forRow: 2, inSection: 0)
-                    let indexPath4 = NSIndexPath(forRow: 3, inSection: 0)
+                    let indexPath1 = IndexPath(row: 0, section: 0)
+                    let indexPath2 = IndexPath(row: 1, section: 0)
+                    let indexPath3 = IndexPath(row: 2, section: 0)
+                    let indexPath4 = IndexPath(row: 3, section: 0)
                     expect(managePlayersViewModel.playerNameAtIndexPath(indexPath1)).to(equal("C"))
                     expect(managePlayersViewModel.playerNameAtIndexPath(indexPath2)).to(equal("A"))
                     expect(managePlayersViewModel.playerNameAtIndexPath(indexPath3)).to(equal("D"))
@@ -104,7 +105,7 @@ class ManagePlayersViewModelSpec: QuickSpec {
                 }
 
                 it("allows selecting and deselecting a player") {
-                    let indexPath = NSIndexPath(forRow: 0, inSection: 0)
+                    let indexPath = IndexPath(row: 0, section: 0)
                     managePlayersViewModel.selectPlayerAtIndexPath(indexPath)
                     expect(managePlayersViewModel.isPlayerSelectedAtIndexPath(indexPath)).to(beTrue())
 
@@ -115,7 +116,7 @@ class ManagePlayersViewModelSpec: QuickSpec {
 
             context("when asked to refresh") {
                 it("fetches a list of players") {
-                    managePlayersViewModel.refreshObserver.sendNext(())
+                    managePlayersViewModel.refreshObserver.send(value: ())
                     expect(mockStore.didFetchPlayers).to(beTrue())
                 }
             }
@@ -125,36 +126,36 @@ class ManagePlayersViewModelSpec: QuickSpec {
                     // Aggregate loading states into an array
                     var loadingStates: [Bool] = []
                     managePlayersViewModel.isLoading.producer
-                        .take(5)
+                        .take(first: 5)
                         .collect()
-                        .startWithNext({ values in
+                        .startWithValues({ values in
                             loadingStates = values
                         })
 
                     managePlayersViewModel.active.value = true
-                    managePlayersViewModel.refreshObserver.sendNext(())
+                    managePlayersViewModel.refreshObserver.send(value: ())
 
                     expect(loadingStates).to(equal([false, true, false, true, false]))
                 }
 
                 it("notifies subscribers about content changes") {
                     var changeset: Changeset<Player>?
-                    managePlayersViewModel.contentChangesSignal.observeNext { contentChanges in
+                    managePlayersViewModel.contentChangesSignal.observeValues { contentChanges in
                         changeset = contentChanges
                     }
 
                     let expectedInsertions = [
-                        NSIndexPath(forRow: 0, inSection: 0),
-                        NSIndexPath(forRow: 1, inSection: 0),
-                        NSIndexPath(forRow: 2, inSection: 0),
-                        NSIndexPath(forRow: 3, inSection: 0)
+                        IndexPath(row: 0, section: 0),
+                        IndexPath(row: 1, section: 0),
+                        IndexPath(row: 2, section: 0),
+                        IndexPath(row: 3, section: 0)
                     ]
 
                     managePlayersViewModel.active.value = true
                     expect(changeset?.deletions).to(beEmpty())
                     expect(changeset?.insertions).to(equal(expectedInsertions))
 
-                    managePlayersViewModel.refreshObserver.sendNext(())
+                    managePlayersViewModel.refreshObserver.send(value: ())
                     expect(changeset?.deletions).to(beEmpty())
                     expect(changeset?.insertions).to(beEmpty())
                 }
@@ -164,7 +165,7 @@ class ManagePlayersViewModelSpec: QuickSpec {
                 mockStore.players = nil // will cause fetch error
 
                 var didRaiseAlert = false
-                managePlayersViewModel.alertMessageSignal.observeNext({ alertMessage in
+                managePlayersViewModel.alertMessageSignal.observeValues({ alertMessage in
                     didRaiseAlert = true
                 })
 

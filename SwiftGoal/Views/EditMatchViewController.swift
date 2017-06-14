@@ -9,21 +9,22 @@
 import UIKit
 import ReactiveCocoa
 import SnapKit
+import ReactiveSwift
 
 class EditMatchViewController: UIViewController {
 
-    private let viewModel: EditMatchViewModel
+    fileprivate let viewModel: EditMatchViewModel
 
-    private weak var homeGoalsLabel: UILabel!
-    private weak var goalSeparatorLabel: UILabel!
-    private weak var awayGoalsLabel: UILabel!
-    private weak var homeGoalsStepper: UIStepper!
-    private weak var awayGoalsStepper: UIStepper!
-    private weak var homePlayersButton: UIButton!
-    private weak var awayPlayersButton: UIButton!
+    fileprivate weak var homeGoalsLabel: UILabel!
+    fileprivate weak var goalSeparatorLabel: UILabel!
+    fileprivate weak var awayGoalsLabel: UILabel!
+    fileprivate weak var homeGoalsStepper: UIStepper!
+    fileprivate weak var awayGoalsStepper: UIStepper!
+    fileprivate weak var homePlayersButton: UIButton!
+    fileprivate weak var awayPlayersButton: UIButton!
 
-    private var saveAction: CocoaAction
-    private let saveButtonItem: UIBarButtonItem
+    fileprivate var saveAction: CocoaAction<Any>
+    fileprivate let saveButtonItem: UIBarButtonItem
 
     // MARK: Lifecycle
 
@@ -31,16 +32,16 @@ class EditMatchViewController: UIViewController {
         self.viewModel = viewModel
         self.saveAction = CocoaAction(viewModel.saveAction, { _ in return () })
         self.saveButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .Save,
+            barButtonSystemItem: .save,
             target: self.saveAction,
-            action: CocoaAction.selector
+            action: CocoaAction<Any>.selector as Selector
         )
 
         super.init(nibName: nil, bundle: nil)
 
         // Set up navigation item
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .Cancel,
+            barButtonSystemItem: .cancel,
             target: self,
             action: #selector(cancelButtonTapped)
         )
@@ -56,7 +57,7 @@ class EditMatchViewController: UIViewController {
     override func loadView() {
         let view = UIView()
 
-        view.backgroundColor = UIColor.whiteColor()
+        view.backgroundColor = UIColor.white
 
         let labelFont = UIFont(name: "OpenSans-Semibold", size: 70)
 
@@ -84,20 +85,20 @@ class EditMatchViewController: UIViewController {
         view.addSubview(awayGoalsStepper)
         self.awayGoalsStepper = awayGoalsStepper
 
-        let homePlayersButton = UIButton(type: .System)
+        let homePlayersButton = UIButton(type: .system)
         homePlayersButton.titleLabel?.font = UIFont(name: "OpenSans", size: 15)
         homePlayersButton.addTarget(self,
             action: #selector(homePlayersButtonTapped),
-            forControlEvents: .TouchUpInside
+            for: .touchUpInside
         )
         view.addSubview(homePlayersButton)
         self.homePlayersButton = homePlayersButton
 
-        let awayPlayersButton = UIButton(type: .System)
+        let awayPlayersButton = UIButton(type: .system)
         awayPlayersButton.titleLabel?.font = UIFont(name: "OpenSans", size: 15)
         awayPlayersButton.addTarget(self,
             action: #selector(awayPlayersButtonTapped),
-            forControlEvents: .TouchUpInside
+            for: .touchUpInside
         )
         view.addSubview(awayPlayersButton)
         self.awayPlayersButton = awayPlayersButton
@@ -114,7 +115,7 @@ class EditMatchViewController: UIViewController {
 
     // MARK: Bindings
 
-    private func bindViewModel() {
+    fileprivate func bindViewModel() {
         self.title = viewModel.title
 
         // Initial values
@@ -125,44 +126,44 @@ class EditMatchViewController: UIViewController {
         viewModel.awayGoals <~ awayGoalsStepper.signalProducer()
 
         viewModel.formattedHomeGoals.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] formattedHomeGoals in
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] formattedHomeGoals in
                 self?.homeGoalsLabel.text = formattedHomeGoals
             })
 
         viewModel.formattedAwayGoals.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] formattedAwayGoals in
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] formattedAwayGoals in
                 self?.awayGoalsLabel.text = formattedAwayGoals
             })
 
         viewModel.homePlayersString.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] homePlayersString in
-                self?.homePlayersButton.setTitle(homePlayersString, forState: .Normal)
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] homePlayersString in
+                self?.homePlayersButton.setTitle(homePlayersString, for: UIControlState())
             })
 
         viewModel.awayPlayersString.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] awayPlayersString in
-                self?.awayPlayersButton.setTitle(awayPlayersString, forState: .Normal)
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] awayPlayersString in
+                self?.awayPlayersButton.setTitle(awayPlayersString, for: UIControlState())
             })
 
         viewModel.inputIsValid.producer
-            .observeOn(UIScheduler())
-            .startWithNext({ [weak self] inputIsValid in
-                self?.saveButtonItem.enabled = inputIsValid
+            .observe(on: UIScheduler())
+            .startWithValues({ [weak self] inputIsValid in
+                self?.saveButtonItem.isEnabled = inputIsValid
             })
 
-        viewModel.saveAction.events.observeNext({ [weak self] event in
+        viewModel.saveAction.events.observeValues({ [weak self] event in
             switch event {
-            case let .Next(success):
+            case let .value(success):
                 if success {
-                    self?.dismissViewControllerAnimated(true, completion: nil)
+                    self?.dismiss(animated: true, completion: nil)
                 } else {
                     self?.presentErrorMessage("The match could not be saved.")
                 }
-            case let .Failed(error):
+            case let .failed(error):
                 self?.presentErrorMessage(error.localizedDescription)
             default:
                 return
@@ -172,8 +173,8 @@ class EditMatchViewController: UIViewController {
 
     // MARK: Layout
 
-    private func makeConstraints() {
-        let superview = self.view
+    fileprivate func makeConstraints() {
+        guard let superview = self.view else { return }
 
         homeGoalsLabel.snp_makeConstraints { make in
             make.trailing.equalTo(goalSeparatorLabel.snp_leading).offset(-10)
@@ -216,7 +217,7 @@ class EditMatchViewController: UIViewController {
     // MARK: User Interaction
 
     func cancelButtonTapped() {
-        dismissViewControllerAnimated(true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
 
     func homePlayersButtonTapped() {
@@ -233,15 +234,15 @@ class EditMatchViewController: UIViewController {
 
     // MARK: Private Helpers
 
-    func presentErrorMessage(message: String) {
+    func presentErrorMessage(_ message: String) {
         let alertController = UIAlertController(
             title: "Oops!",
             message: message,
-            preferredStyle: .Alert
+            preferredStyle: .alert
         )
-        let cancelAction = UIAlertAction(title: "OK", style: .Cancel, handler: nil)
+        let cancelAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
         alertController.addAction(cancelAction)
 
-        self.presentViewController(alertController, animated: true, completion: nil)
+        self.present(alertController, animated: true, completion: nil)
     }
 }

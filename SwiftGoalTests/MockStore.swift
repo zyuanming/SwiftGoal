@@ -8,6 +8,8 @@
 
 import ReactiveCocoa
 @testable import SwiftGoal
+import ReactiveSwift
+import Result
 
 class MockStore: StoreType {
     // nil is used to cause fetch error
@@ -55,54 +57,54 @@ class MockStore: StoreType {
 
     // MARK: Matches
 
-    func fetchMatches() -> SignalProducer<[Match], NSError> {
+    func fetchMatches() -> SignalProducer<[Match], AnyError> {
         didFetchMatches = true
         if let matches = self.matches {
             return SignalProducer(value: matches)
         } else {
             let error = NSError(domain: "", code: 0, userInfo: nil)
-            return SignalProducer(error: error)
+            return SignalProducer(error: AnyError(error))
         }
     }
 
-    func createMatch(parameters: MatchParameters) -> SignalProducer<Bool, NSError> {
+    func createMatch(_ parameters: MatchParameters) -> SignalProducer<Bool, AnyError> {
         return SignalProducer(value: false)
     }
 
-    func updateMatch(match: Match, parameters: MatchParameters) -> SignalProducer<Bool, NSError> {
+    func updateMatch(_ match: Match, parameters: MatchParameters) -> SignalProducer<Bool, AnyError> {
         return SignalProducer(value: false)
     }
 
-    func deleteMatch(match: Match) -> SignalProducer<Bool, NSError> {
+    func deleteMatch(_ match: Match) -> SignalProducer<Bool, AnyError> {
         deletedMatch = match
         return SignalProducer(value: true)
     }
 
     // MARK: Players
 
-    func fetchPlayers() -> SignalProducer<[Player], NSError> {
+    func fetchPlayers() -> SignalProducer<[Player], AnyError> {
         didFetchPlayers = true
         if let players = self.players {
             return SignalProducer(value: players)
         } else {
             let error = NSError(domain: "", code: 0, userInfo: nil)
-            return SignalProducer(error: error)
+            return SignalProducer(error: AnyError(error))
         }
     }
 
-    func createPlayerWithName(name: String) -> SignalProducer<Bool, NSError> {
+    func createPlayerWithName(_ name: String) -> SignalProducer<Bool, AnyError> {
         return SignalProducer(value: false)
     }
 
     // MARK: Rankings
 
-    func fetchRankings() -> SignalProducer<[Ranking], NSError> {
+    func fetchRankings() -> SignalProducer<[Ranking], AnyError> {
         didFetchRankings = true
         if let rankings = self.rankings {
             return SignalProducer(value: rankings)
         } else {
             let error = NSError(domain: "", code: 0, userInfo: nil)
-            return SignalProducer(error: error)
+            return SignalProducer(error: AnyError(error))
         }
     }
 }

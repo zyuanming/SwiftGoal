@@ -49,15 +49,15 @@ class ChangesetSpec: QuickSpec {
                     contentMatches: { item1, item2 in item1.value == item2.value }
                 )
 
-                let deletion1 = NSIndexPath(forRow: 0, inSection: 0)
-                let deletion2 = NSIndexPath(forRow: 3, inSection: 0)
+                let deletion1 = IndexPath(row: 0, section: 0)
+                let deletion2 = IndexPath(row: 3, section: 0)
 
-                let modification1 = NSIndexPath(forRow: 1, inSection: 0)
-                let modification2 = NSIndexPath(forRow: 4, inSection: 0)
+                let modification1 = IndexPath(row: 1, section: 0)
+                let modification2 = IndexPath(row: 4, section: 0)
 
-                let insertion1 = NSIndexPath(forRow: 0, inSection: 0)
-                let insertion2 = NSIndexPath(forRow: 1, inSection: 0)
-                let insertion3 = NSIndexPath(forRow: 4, inSection: 0)
+                let insertion1 = IndexPath(row: 0, section: 0)
+                let insertion2 = IndexPath(row: 1, section: 0)
+                let insertion3 = IndexPath(row: 4, section: 0)
 
                 expect(changeset.deletions).to(equal([deletion1, deletion2]))
                 expect(changeset.modifications).to(equal([modification1, modification2]))

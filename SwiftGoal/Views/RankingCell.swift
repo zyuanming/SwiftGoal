@@ -36,7 +36,7 @@ class RankingCell: UITableViewCell {
 
     // MARK: Layout
 
-    private func makeConstraints() {
+    fileprivate func makeConstraints() {
         let superview = self.contentView
 
         playerNameLabel.snp_makeConstraints { make in

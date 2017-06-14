@@ -43,7 +43,7 @@ class EditMatchViewModelSpec: QuickSpec {
 
                     it("fails when there are no home players") {
                         let awayPlayersViewModel = viewModel.manageAwayPlayersViewModel()
-                        let awayPlayerIndexPath = NSIndexPath(forRow: 1, inSection: 0)
+                        let awayPlayerIndexPath = IndexPath(row: 1, section: 0)
                         awayPlayersViewModel.active.value = true
                         awayPlayersViewModel.selectPlayerAtIndexPath(awayPlayerIndexPath)
 
@@ -52,7 +52,7 @@ class EditMatchViewModelSpec: QuickSpec {
 
                     it("fails when there are no away players") {
                         let homePlayersViewModel = viewModel.manageHomePlayersViewModel()
-                        let homePlayerIndexPath = NSIndexPath(forRow: 0, inSection: 0)
+                        let homePlayerIndexPath = IndexPath(row: 0, section: 0)
                         homePlayersViewModel.active.value = true
                         homePlayersViewModel.selectPlayerAtIndexPath(homePlayerIndexPath)
 
@@ -61,12 +61,12 @@ class EditMatchViewModelSpec: QuickSpec {
 
                     it("passes when there are both home and away players") {
                         let homePlayersViewModel = viewModel.manageHomePlayersViewModel()
-                        let homePlayerIndexPath = NSIndexPath(forRow: 0, inSection: 0)
+                        let homePlayerIndexPath = IndexPath(row: 0, section: 0)
                         homePlayersViewModel.active.value = true
                         homePlayersViewModel.selectPlayerAtIndexPath(homePlayerIndexPath)
 
                         let awayPlayersViewModel = viewModel.manageAwayPlayersViewModel()
-                        let awayPlayerIndexPath = NSIndexPath(forRow: 1, inSection: 0)
+                        let awayPlayerIndexPath = IndexPath(row: 1, section: 0)
                         awayPlayersViewModel.active.value = true
                         awayPlayersViewModel.selectPlayerAtIndexPath(awayPlayerIndexPath)
 

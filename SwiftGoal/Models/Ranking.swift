@@ -8,17 +8,18 @@
 
 import Argo
 import Curry
+import Runes
 
 struct Ranking {
     let player: Player
     let rating: Float
 
-    static func contentMatches(lhs: Ranking, _ rhs: Ranking) -> Bool {
+    static func contentMatches(_ lhs: Ranking, _ rhs: Ranking) -> Bool {
         return Player.contentMatches(lhs.player, rhs.player)
             && lhs.rating == rhs.rating
     }
 
-    static func contentMatches(lhs: [Ranking], _ rhs: [Ranking]) -> Bool {
+    static func contentMatches(_ lhs: [Ranking], _ rhs: [Ranking]) -> Bool {
         // Make sure arrays have same size
         guard lhs.count == rhs.count else { return false }
 
@@ -39,7 +40,7 @@ func ==(lhs: Ranking, rhs: Ranking) -> Bool {
 // MARK: Decodable
 
 extension Ranking: Decodable {
-    static func decode(json: JSON) -> Decoded<Ranking> {
+    static func decode(_ json: JSON) -> Decoded<Ranking> {
         return curry(Ranking.init)
             <^> json <| "player"
             <*> json <| "rating"

@@ -8,9 +8,11 @@
 
 import ReactiveCocoa
 import Result
+import UIKit
+import ReactiveSwift
 
 extension Array {
-    func difference<T: Equatable>(otherArray: [T]) -> [T] {
+    func difference<T: Equatable>(_ otherArray: [T]) -> [T] {
         var result = [T]()
 
         for e in self {
@@ -24,7 +26,7 @@ extension Array {
         return result
     }
 
-    func intersection<T: Equatable>(otherArray: [T]) -> [T] {
+    func intersection<T: Equatable>(_ otherArray: [T]) -> [T] {
         var result = [T]()
 
         for e in self {
@@ -40,55 +42,59 @@ extension Array {
 }
 
 extension UIStepper {
-    func signalProducer() -> SignalProducer<Int, NoError> {
-        return self.rac_newValueChannelWithNilValue(0).toSignalProducer()
-            .map { $0 as! Int }
-            .flatMapError { _ in return SignalProducer<Int, NoError>.empty }
+    func signalProducer() -> Signal<Int, NoError> {
+//        return self.rac_newValueChannel(withNilValue: 0).toSignalProducer()
+//            .map { $0 as! Int }
+//            .flatMapError { _ in return SignalProducer<Int, NoError>.empty }
+        return self.reactive.values.map { Int($0) }.flatMapError { _ in return SignalProducer<Int, NoError>.empty }
     }
 }
 
 extension UITextField {
-    func signalProducer() -> SignalProducer<String, NoError> {
-        return self.rac_textSignal().toSignalProducer()
-            .map { $0 as! String }
-            .flatMapError { _ in return SignalProducer<String, NoError>.empty }
+    func signalProducer() -> Signal<String, NoError> {
+//        return self.rac_textSignal().toSignalProducer()
+//            .map { $0 as! String }
+//            .flatMapError { _ in return SignalProducer<String, NoError>.empty }
+        return self.reactive.textValues.map { $0! }.flatMapError { _ in return SignalProducer<String, NoError>.empty }
     }
 }
 
 extension UIViewController {
-    func isActive() -> SignalProducer<Bool, NoError> {
+    func isActive() -> Signal<Bool, NoError> {
 
         // Track whether view is visible
 
-        let viewWillAppear = rac_signalForSelector(#selector(viewWillAppear(_:))).toSignalProducer()
-        let viewWillDisappear = rac_signalForSelector(#selector(viewWillDisappear(_:))).toSignalProducer()
+        let viewWillAppear = reactive.trigger(for: #selector(UIViewController.viewWillAppear(_:)))
+        let viewWillDisappear = reactive.trigger(for: #selector(UIViewController.viewWillDisappear(_:)))
 
-        let viewIsVisible = SignalProducer<SignalProducer<Bool, NSError>, NoError>(values: [
-            viewWillAppear.map { _ in true },
-            viewWillDisappear.map { _ in false }
-        ]).flatten(.Merge)
+
+//        let viewIsVisible = Signal<Bool, NoError>([
+//            viewWillAppear.map { _ in true },
+//            viewWillDisappear.map { _ in false }
+//        ]).flatten(.merge)
+
+        let viewIsVisible = Signal.merge(viewWillAppear.map { _ in true }, viewWillDisappear.map { _ in false })
 
         // Track whether app is in foreground
 
-        let notificationCenter = NSNotificationCenter.defaultCenter()
+        let notificationCenter = NotificationCenter.default
 
-        let didBecomeActive = notificationCenter
-            .rac_addObserverForName(UIApplicationDidBecomeActiveNotification, object: nil)
-            .toSignalProducer()
+        let didBecomeActive = notificationCenter.reactive.notifications(forName: NSNotification.Name.UIApplicationDidBecomeActive)
 
-        let willBecomeInactive = notificationCenter
-            .rac_addObserverForName(UIApplicationWillResignActiveNotification, object: nil)
-            .toSignalProducer()
+        let willBecomeInactive = notificationCenter.reactive.notifications(forName: NSNotification.Name.UIApplicationWillResignActive)
 
-        let appIsActive = SignalProducer<SignalProducer<Bool, NSError>, NoError>(values: [
-            SignalProducer(value: true), // Account for app being initially active without notification
-            didBecomeActive.map { _ in true },
-            willBecomeInactive.map { _ in false }
-        ]).flatten(.Merge)
+//        let appIsActive = Signal<Signal<Bool, AnyError>, NoError>([
+//            Signal<Bool, NoError>(value: true), // Account for app being initially active without notification
+//            didBecomeActive.map { _ in true },
+//            willBecomeInactive.map { _ in false }
+//        ]).flatten(.merge)
+
+        let appIsActive = Signal.merge(didBecomeActive.map { _ in true },
+                                       willBecomeInactive.map { _ in false })
 
         // View controller is active iff both are true:
 
-        return combineLatest(viewIsVisible, appIsActive)
+        return Signal.combineLatest(viewIsVisible, appIsActive)
             .map { $0 && $1 }
             .flatMapError { _ in SignalProducer.empty }
     }

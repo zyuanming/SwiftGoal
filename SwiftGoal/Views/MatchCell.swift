@@ -20,15 +20,15 @@ class MatchCell: UITableViewCell {
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         homePlayersLabel = UILabel()
         homePlayersLabel.font = UIFont(name: "OpenSans", size: 20)
-        homePlayersLabel.textAlignment = .Left
+        homePlayersLabel.textAlignment = .left
 
         resultLabel = UILabel()
         resultLabel.font = UIFont(name: "OpenSans-Semibold", size: 20)
-        resultLabel.textAlignment = .Center
+        resultLabel.textAlignment = .center
 
         awayPlayersLabel = UILabel()
         awayPlayersLabel.font = UIFont(name: "OpenSans", size: 20)
-        awayPlayersLabel.textAlignment = .Right
+        awayPlayersLabel.textAlignment = .right
 
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
@@ -45,7 +45,7 @@ class MatchCell: UITableViewCell {
 
     // MARK: Layout
 
-    private func makeConstraints() {
+    fileprivate func makeConstraints() {
         let superview = self.contentView
 
         homePlayersLabel.snp_makeConstraints { make in

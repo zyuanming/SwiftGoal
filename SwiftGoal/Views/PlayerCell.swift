@@ -31,7 +31,7 @@ class PlayerCell: UITableViewCell {
 
     // MARK: Layout
 
-    private func makeConstraints() {
+    fileprivate func makeConstraints() {
         let superview = self.contentView
 
         nameLabel.snp_makeConstraints { make in
