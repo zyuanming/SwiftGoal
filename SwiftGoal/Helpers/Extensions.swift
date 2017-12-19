@@ -96,6 +96,6 @@ extension UIViewController {
 
         return Signal.combineLatest(viewIsVisible, appIsActive)
             .map { $0 && $1 }
-            .flatMapError { _ in SignalProducer.empty }
+//            .flatMapError { _ in SignalProducer.empty }
     }
 }
