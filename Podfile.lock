@@ -1,0 +1,39 @@
+PODS:
+  - Argo (4.1.2):
+    - Runes (>= 4.0.0)
+  - Curry (3.0.0)
+  - DZNEmptyDataSet (1.8.1)
+  - Nimble (7.0.3)
+  - Quick (1.2.0)
+  - ReactiveCocoa (7.0.1):
+    - ReactiveSwift (~> 3.0)
+  - ReactiveSwift (3.0.0):
+    - Result (~> 3.2)
+  - Result (3.2.4)
+  - Runes (4.1.0)
+  - SnapKit (4.0.0)
+
+DEPENDENCIES:
+  - Argo
+  - Curry
+  - DZNEmptyDataSet
+  - Nimble
+  - Quick
+  - ReactiveCocoa (~> 7.0.1)
+  - SnapKit (~> 4.0.0)
+
+SPEC CHECKSUMS:
+  Argo: 5db06502fc1222d83011f574243089dab25202ff
+  Curry: eb3d2c75aec678b3cc7fb2729d2ad6dd121531d1
+  DZNEmptyDataSet: 9525833b9e68ac21c30253e1d3d7076cc828eaa7
+  Nimble: 7f5a9c447a33002645a071bddafbfb24ea70e0ac
+  Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08
+  ReactiveCocoa: a1b5d502d0d1534f9a72981a485b297b17127f83
+  ReactiveSwift: d9fe0db33c1aaabecb092e8de83cf52875c0de6f
+  Result: d2d07204ce72856f1fd9130bbe42c35a7b0fea10
+  Runes: 72a67a5bbbe1b5fdae08b5a01b10c60d83fc69aa
+  SnapKit: a42d492c16e80209130a3379f73596c3454b7694
+
+PODFILE CHECKSUM: ae5f51f07dc30ba0a738d1058da77ccdc17e3793
+
+COCOAPODS: 1.2.1

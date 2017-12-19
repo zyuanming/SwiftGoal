@@ -17,7 +17,7 @@ class ManagePlayersViewModel {
     // Inputs
     let active = MutableProperty(false)
     let playerName = MutableProperty("")
-    let refreshObserver: Observer<Void, NoError>
+    let refreshObserver: Signal<Void, NoError>.Observer
 
     // Outputs
     let title: String
@@ -29,14 +29,17 @@ class ManagePlayersViewModel {
 
     // Actions
     lazy var saveAction: Action<Void, Bool, AnyError> = { [unowned self] in
-        return Action<Void, Bool, AnyError>(enabledIf: self.inputIsValid, { _ in
+        return Action<Void, Bool, AnyError>(enabledIf: self.inputIsValid, execute: { (_) -> SignalProducer<Bool, AnyError> in
             return self.store.createPlayerWithName(self.playerName.value)
         })
+//        return Action<Void, Bool, AnyError>(enabledIf: self.inputIsValid, { _ in
+//            return self.store.createPlayerWithName(self.playerName.value)
+//        })
     }()
 
     fileprivate let store: StoreType
-    fileprivate let contentChangesObserver: Observer<PlayerChangeset, NoError>
-    fileprivate let alertMessageObserver: Observer<String, NoError>
+    fileprivate let contentChangesObserver: Signal<PlayerChangeset, NoError>.Observer
+    fileprivate let alertMessageObserver: Signal<String, NoError>.Observer
     fileprivate let disabledPlayers: Set<Player>
 
     fileprivate var players: [Player]
@@ -76,7 +79,7 @@ class ManagePlayersViewModel {
 
         SignalProducer(refreshSignal)
             .on(starting: { _ in isLoading.value = true })
-            .flatMap(.latest, transform: { _ in
+            .flatMap(.latest, { _ in
                 return store.fetchPlayers()
                     .flatMapError { error in
                         alertMessageObserver.send(value: error.localizedDescription)

@@ -26,7 +26,7 @@ class EditMatchViewModel {
 
     // Actions
     lazy var saveAction: Action<Void, Bool, AnyError> = { [unowned self] in
-        return Action(enabledIf: self.inputIsValid, { _ in
+        return Action<Void, Bool, AnyError>(enabledIf: self.inputIsValid, execute: { (_) -> SignalProducer<Bool, AnyError> in
             let parameters = MatchParameters(
                 homePlayers: self.homePlayers.value,
                 awayPlayers: self.awayPlayers.value,

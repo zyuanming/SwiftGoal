@@ -51,7 +51,7 @@ func ==(lhs: Match, rhs: Match) -> Bool {
 
 // MARK: Decodable
 
-extension Match: Decodable {
+extension Match: Argo.Decodable {
     static func decode(_ json: JSON) -> Decoded<Match> {
         return curry(Match.init)
             <^> json <| identifierKey

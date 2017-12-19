@@ -16,7 +16,7 @@ class MatchesViewModel {
 
     // Inputs
     let active = MutableProperty(false)
-    let refreshObserver: Observer<Void, NoError>
+    let refreshObserver: Signal<Void, NoError>.Observer
 
     // Outputs
     let title: String
@@ -26,15 +26,15 @@ class MatchesViewModel {
 
     // Actions
     lazy var deleteAction: Action<IndexPath, Bool, AnyError> = { [unowned self] in
-        return Action({ indexPath in
+        return Action(execute: { indexPath in
             let match = self.matchAtIndexPath(indexPath)
             return self.store.deleteMatch(match)
         })
     }()
 
     fileprivate let store: StoreType
-    fileprivate let contentChangesObserver: Observer<MatchChangeset, NoError>
-    fileprivate let alertMessageObserver: Observer<String, NoError>
+    fileprivate let contentChangesObserver: Signal<MatchChangeset, NoError>.Observer
+    fileprivate let alertMessageObserver: Signal<String, NoError>.Observer
     fileprivate var matches: [Match]
 
     // MARK: - Lifecycle

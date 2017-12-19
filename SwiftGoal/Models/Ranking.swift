@@ -39,7 +39,7 @@ func ==(lhs: Ranking, rhs: Ranking) -> Bool {
 
 // MARK: Decodable
 
-extension Ranking: Decodable {
+extension Ranking: Argo.Decodable {
     static func decode(_ json: JSON) -> Decoded<Ranking> {
         return curry(Ranking.init)
             <^> json <| "player"

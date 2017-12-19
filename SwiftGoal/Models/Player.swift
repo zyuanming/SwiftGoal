@@ -56,7 +56,7 @@ extension Player: Hashable {
 
 // MARK: Decodable
 
-extension Player: Decodable {
+extension Player: Argo.Decodable {
     static func decode(_ json: JSON) -> Decoded<Player> {
         return curry(Player.init)
             <^> json <| identifierKey

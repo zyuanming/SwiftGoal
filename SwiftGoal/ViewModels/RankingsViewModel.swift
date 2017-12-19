@@ -16,7 +16,7 @@ class RankingsViewModel {
 
     // Inputs
     let active = MutableProperty(false)
-    let refreshObserver: Observer<Void, NoError>
+    let refreshObserver: Signal<Void, NoError>.Observer
 
     // Outputs
     let title: String
@@ -25,8 +25,8 @@ class RankingsViewModel {
     let alertMessageSignal: Signal<String, NoError>
 
     fileprivate let store: StoreType
-    fileprivate let contentChangesObserver: Observer<RankingChangeset, NoError>
-    fileprivate let alertMessageObserver: Observer<String, NoError>
+    fileprivate let contentChangesObserver: Signal<RankingChangeset, NoError>.Observer
+    fileprivate let alertMessageObserver: Signal<String, NoError>.Observer
 
     fileprivate var rankings: [Ranking]
 
@@ -58,7 +58,7 @@ class RankingsViewModel {
 
         SignalProducer(refreshSignal)
             .on(starting: { _ in isLoading.value = true })
-            .flatMap(.latest, transform: { _ in
+            .flatMap(.latest, { _ in
                 return store.fetchRankings()
                     .flatMapError { error in
                         alertMessageObserver.send(value: error.localizedDescription)
