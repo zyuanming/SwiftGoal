@@ -119,8 +119,8 @@ class LocalStore: StoreType {
     }
 
     fileprivate func matchFromParameters(_ parameters: MatchParameters, withIdentifier identifier: String) -> Match {
-        let sortByName: (Player, Player) -> Bool = { players in
-            players.0.name < players.1.name
+        let sortByName: (Player, Player) -> Bool = { player1, player2  in
+            player1.name < player2.name
         }
 
         return Match(

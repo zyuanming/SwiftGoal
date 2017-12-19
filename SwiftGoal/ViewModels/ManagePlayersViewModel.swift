@@ -78,7 +78,7 @@ class ManagePlayersViewModel {
             .observe(refreshObserver)
 
         SignalProducer(refreshSignal)
-            .on(starting: { _ in isLoading.value = true })
+            .on(starting: { isLoading.value = true })
             .flatMap(.latest, { _ in
                 return store.fetchPlayers()
                     .flatMapError { error in
@@ -86,7 +86,7 @@ class ManagePlayersViewModel {
                         return SignalProducer(value: [])
                     }
             })
-            .on(starting: { _ in isLoading.value = false })
+            .on(starting: { isLoading.value = false })
             .combinePrevious([]) // Preserve history to calculate changeset
             .startWithValues({ [weak self] (oldPlayers, newPlayers) in
                 self?.players = newPlayers
@@ -105,7 +105,7 @@ class ManagePlayersViewModel {
             .map { $0.localizedDescription }
             .observe(alertMessageObserver)
 
-        inputIsValid <~ playerName.producer.map { $0.characters.count > 0 }
+        inputIsValid <~ playerName.producer.map { $0.count > 0 }
     }
 
     // MARK: Data Source

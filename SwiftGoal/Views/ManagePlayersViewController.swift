@@ -94,12 +94,12 @@ class ManagePlayersViewController: UITableViewController {
 
     // MARK: User Interaction
 
-    func addPlayerButtonTapped() {
+    @objc func addPlayerButtonTapped() {
         let newPlayerViewController = self.newPlayerViewController()
         present(newPlayerViewController, animated: true, completion: nil)
     }
 
-    func refreshControlTriggered() {
+    @objc func refreshControlTriggered() {
         viewModel.refreshObserver.send(value: ())
     }
 

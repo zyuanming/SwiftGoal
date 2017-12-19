@@ -89,7 +89,7 @@ class RankingsViewController: UITableViewController {
 
     // MARK: User Interaction
 
-    func refreshControlTriggered() {
+    @objc func refreshControlTriggered() {
         viewModel.refreshObserver.send(value: ())
     }
 

@@ -176,57 +176,57 @@ class EditMatchViewController: UIViewController {
     fileprivate func makeConstraints() {
         guard let superview = self.view else { return }
 
-        homeGoalsLabel.snp_makeConstraints { make in
-            make.trailing.equalTo(goalSeparatorLabel.snp_leading).offset(-10)
-            make.baseline.equalTo(goalSeparatorLabel.snp_baseline)
+        homeGoalsLabel.snp.makeConstraints { make in
+            make.trailing.equalTo(goalSeparatorLabel.snp.leading).offset(-10)
+            make.lastBaseline.equalTo(goalSeparatorLabel.snp.lastBaseline)
         }
 
-        goalSeparatorLabel.snp_makeConstraints { make in
-            make.centerX.equalTo(superview.snp_centerX)
-            make.centerY.equalTo(superview.snp_centerY).offset(-50)
+        goalSeparatorLabel.snp.makeConstraints { make in
+            make.centerX.equalTo(superview.snp.centerX)
+            make.centerY.equalTo(superview.snp.centerY).offset(-50)
         }
 
-        awayGoalsLabel.snp_makeConstraints { make in
-            make.leading.equalTo(goalSeparatorLabel.snp_trailing).offset(10)
-            make.baseline.equalTo(goalSeparatorLabel.snp_baseline)
+        awayGoalsLabel.snp.makeConstraints { make in
+            make.leading.equalTo(goalSeparatorLabel.snp.trailing).offset(10)
+            make.lastBaseline.equalTo(goalSeparatorLabel.snp.lastBaseline)
         }
 
-        homeGoalsStepper.snp_makeConstraints { make in
-            make.top.equalTo(goalSeparatorLabel.snp_bottom).offset(10)
-            make.trailing.equalTo(homeGoalsLabel.snp_trailing)
+        homeGoalsStepper.snp.makeConstraints { make in
+            make.top.equalTo(goalSeparatorLabel.snp.bottom).offset(10)
+            make.trailing.equalTo(homeGoalsLabel.snp.trailing)
         }
 
-        awayGoalsStepper.snp_makeConstraints { make in
-            make.top.equalTo(goalSeparatorLabel.snp_bottom).offset(10)
-            make.leading.equalTo(awayGoalsLabel.snp_leading)
+        awayGoalsStepper.snp.makeConstraints { make in
+            make.top.equalTo(goalSeparatorLabel.snp.bottom).offset(10)
+            make.leading.equalTo(awayGoalsLabel.snp.leading)
         }
 
-        homePlayersButton.snp_makeConstraints { make in
-            make.top.equalTo(homeGoalsStepper.snp_bottom).offset(30)
-            make.leading.greaterThanOrEqualTo(superview.snp_leadingMargin)
-            make.trailing.equalTo(homeGoalsLabel.snp_trailing)
+        homePlayersButton.snp.makeConstraints { make in
+            make.top.equalTo(homeGoalsStepper.snp.bottom).offset(30)
+            make.leading.greaterThanOrEqualTo(superview.snp.leadingMargin)
+            make.trailing.equalTo(homeGoalsLabel.snp.trailing)
         }
 
-        awayPlayersButton.snp_makeConstraints { make in
-            make.top.equalTo(awayGoalsStepper.snp_bottom).offset(30)
-            make.leading.equalTo(awayGoalsLabel.snp_leading)
-            make.trailing.lessThanOrEqualTo(superview.snp_trailingMargin)
+        awayPlayersButton.snp.makeConstraints { make in
+            make.top.equalTo(awayGoalsStepper.snp.bottom).offset(30)
+            make.leading.equalTo(awayGoalsLabel.snp.leading)
+            make.trailing.lessThanOrEqualTo(superview.snp.trailingMargin)
         }
     }
 
     // MARK: User Interaction
 
-    func cancelButtonTapped() {
+    @objc func cancelButtonTapped() {
         dismiss(animated: true, completion: nil)
     }
 
-    func homePlayersButtonTapped() {
+    @objc func homePlayersButtonTapped() {
         let homePlayersViewModel = viewModel.manageHomePlayersViewModel()
         let homePlayersViewController = ManagePlayersViewController(viewModel: homePlayersViewModel)
         self.navigationController?.pushViewController(homePlayersViewController, animated: true)
     }
 
-    func awayPlayersButtonTapped() {
+    @objc func awayPlayersButtonTapped() {
         let awayPlayersViewModel = viewModel.manageAwayPlayersViewModel()
         let awayPlayersViewController = ManagePlayersViewController(viewModel: awayPlayersViewModel)
         self.navigationController?.pushViewController(awayPlayersViewController, animated: true)

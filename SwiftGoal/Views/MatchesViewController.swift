@@ -101,14 +101,14 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
 
     // MARK: User Interaction
 
-    func addMatchButtonTapped() {
+    @objc func addMatchButtonTapped() {
         let newMatchViewModel = viewModel.editViewModelForNewMatch()
         let newMatchViewController = EditMatchViewController(viewModel: newMatchViewModel)
         let newMatchNavigationController = UINavigationController(rootViewController: newMatchViewController)
         self.present(newMatchNavigationController, animated: true, completion: nil)
     }
 
-    func refreshControlTriggered() {
+    @objc func refreshControlTriggered() {
         viewModel.refreshObserver.send(value: ())
     }
 
@@ -125,7 +125,7 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
     func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         let text = "No matches yet!"
         let attributes = [
-            NSFontAttributeName: UIFont(name: "OpenSans-Semibold", size: 30)!
+            NSAttributedStringKey.font: UIFont(name: "OpenSans-Semibold", size: 30)!
         ]
         return NSAttributedString(string: text, attributes: attributes)
     }
@@ -133,8 +133,8 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
     func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         let text = "Check your storage settings, then tap the “+” button to get started."
         let attributes = [
-            NSFontAttributeName: UIFont(name: "OpenSans", size: 20)!,
-            NSForegroundColorAttributeName: UIColor.lightGray
+            NSAttributedStringKey.font: UIFont(name: "OpenSans", size: 20)!,
+            NSAttributedStringKey.foregroundColor: UIColor.lightGray
         ]
         return NSAttributedString(string: text, attributes: attributes)
     }
@@ -142,8 +142,8 @@ class MatchesViewController: UITableViewController, DZNEmptyDataSetDelegate, DZN
     func buttonTitle(forEmptyDataSet scrollView: UIScrollView!, for state: UIControlState) -> NSAttributedString! {
         let text = "Open App Settings"
         let attributes = [
-            NSFontAttributeName: UIFont(name: "OpenSans", size: 20)!,
-            NSForegroundColorAttributeName: (state == UIControlState()
+            NSAttributedStringKey.font: UIFont(name: "OpenSans", size: 20)!,
+            NSAttributedStringKey.foregroundColor: (state == UIControlState()
                 ? Color.primaryColor
                 : Color.lighterPrimaryColor)
         ]

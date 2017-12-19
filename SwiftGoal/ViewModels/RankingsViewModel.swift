@@ -57,7 +57,7 @@ class RankingsViewModel {
             .start(refreshObserver)
 
         SignalProducer(refreshSignal)
-            .on(starting: { _ in isLoading.value = true })
+            .on(starting: { isLoading.value = true })
             .flatMap(.latest, { _ in
                 return store.fetchRankings()
                     .flatMapError { error in
@@ -65,7 +65,7 @@ class RankingsViewModel {
                         return SignalProducer(value: [])
                 }
             })
-            .on(starting: { _ in isLoading.value = false })
+            .on(starting: { isLoading.value = false })
             .combinePrevious([]) // Preserve history to calculate changeset
             .startWithValues({ [weak self] (oldRankings, newRankings) in
                 self?.rankings = newRankings

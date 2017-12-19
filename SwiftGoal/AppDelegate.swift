@@ -51,7 +51,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // MARK: Notifications
 
-    func userDefaultsDidChange(_ notification: Notification) {
+    @objc func userDefaultsDidChange(_ notification: Notification) {
         if let userDefaults = notification.object as? UserDefaults {
             archiveStoreIfLocal()
             store = storeForUserDefaults(userDefaults)
@@ -68,12 +68,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().barTintColor = tintColor
         UINavigationBar.appearance().tintColor = UIColor.white
         UINavigationBar.appearance().titleTextAttributes = [
-            NSFontAttributeName: UIFont(name: "OpenSans-Semibold", size: 20)!,
-            NSForegroundColorAttributeName: UIColor.white
+            NSAttributedStringKey.font: UIFont(name: "OpenSans-Semibold", size: 20)!,
+            NSAttributedStringKey.foregroundColor: UIColor.white
         ]
         UINavigationBar.appearance().isTranslucent = false
         UIBarButtonItem.appearance().setTitleTextAttributes(
-            [NSFontAttributeName: UIFont(name: "OpenSans", size: 17)!],
+            [NSAttributedStringKey.font: UIFont(name: "OpenSans", size: 17)!],
             for: UIControlState()
         )
     }

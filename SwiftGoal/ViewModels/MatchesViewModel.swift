@@ -71,7 +71,7 @@ class MatchesViewModel {
             .observe(refreshObserver)
 
         SignalProducer(refreshSignal)
-            .on(starting: { _ in isLoading.value = true })
+            .on(starting: { isLoading.value = true })
             .flatMap(.latest) { _ in
                 return store.fetchMatches()
                     .flatMapError { error in
@@ -79,7 +79,7 @@ class MatchesViewModel {
                         return SignalProducer(value: [])
                     }
             }
-            .on(starting: { _ in isLoading.value = false })
+            .on(starting: { isLoading.value = false })
             .combinePrevious([]) // Preserve history to calculate changeset
             .startWithValues({ [weak self] (oldMatches, newMatches) in
                 self?.matches = newMatches
